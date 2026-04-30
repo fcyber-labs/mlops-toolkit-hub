@@ -1,7 +1,5 @@
-"""
-Lending Club Credit Risk — Full Evaluation Pipeline
 
-"""
+
 
 import os
 import sys
@@ -24,14 +22,14 @@ from sklearn.metrics import (
     precision_recall_curve, average_precision_score,
     brier_score_loss, log_loss,
 )
-
-warnings.filterwarnings("ignore")
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.logging_config import logger
+warnings.filterwarnings("ignore")
 
 
 
-#  MLflow setup 
+
+#  MLflow setup
 load_dotenv()
 os.environ["MLFLOW_TRACKING_URI"] = os.getenv("MLFLOW_TRACKING_URI", "")
 os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("MLFLOW_TRACKING_USERNAME", "")
@@ -67,16 +65,16 @@ def compute_metrics(
     auc  = roc_auc_score(y_true, y_proba)
     ap   = average_precision_score(y_true, y_proba)
 
-    #  KS Statistic 
+    #  KS Statistic
     fpr_arr, tpr_arr, thr_arr = roc_curve(y_true, y_proba)
     ks_idx       = int(np.argmax(tpr_arr - fpr_arr))
     ks_statistic = float(np.max(tpr_arr - fpr_arr))
     ks_threshold = float(thr_arr[ks_idx])
 
-    #  Gini 
+    #  Gini
     gini = 2 * auc - 1
 
-    #  Lift curve 
+    #  Lift curve
     sorted_idx  = np.argsort(-y_proba)
     n_total     = len(y_true)
     n_pos       = int(y_true.sum())
@@ -86,19 +84,19 @@ def compute_metrics(
     lift_at_10 = float(y_true[sorted_idx[:decile_size]].mean() / base_rate)
     lift_at_20 = float(y_true[sorted_idx[:2 * decile_size]].mean() / base_rate)
 
-    # Lift per decile 
+    # Lift per decile
     lift_by_decile = [
         float(y_true[sorted_idx[:d * decile_size]].mean() / base_rate)
         for d in range(1, 11)
     ]
 
-    #  Business cost 
+    #  Business cost
     business_cost = int(fp * cost_fp + fn * cost_fn)
     random_cost   = int(n_pos * 0.5) * cost_fn + int((n_total - n_pos) * 0.5) * cost_fp
     cost_savings  = float((1 - business_cost / (random_cost + 1e-9)) * 100)
     profit_score  = float(tp * cost_fn / (n_pos * cost_fn + 1e-9) * 100)
 
-    #  Calibration 
+    #  Calibration
     brier  = float(brier_score_loss(y_true, y_proba))
     logloss = float(log_loss(y_true, y_proba))
 
@@ -143,7 +141,7 @@ def print_metrics(m: dict) -> None:
     print("=" * 65)
     print("FULL METRICS SUMMARY")
     print("=" * 65)
-    
+
     # Core metrics
     print(f"\n  {'Core Metrics':^60}")
     print(f"  {'-'*60}")
@@ -154,7 +152,7 @@ def print_metrics(m: dict) -> None:
     print(f"  Gini Coefficient         : {m['gini']:.4f}")
     print(f"  Lift @ Top 10%           : {m['lift_at_10pct']:.2f}x")
     print(f"  Lift @ Top 20%           : {m['lift_at_20pct']:.2f}x")
-    
+
     # Score metrics
     print(f"\n  {'Score Metrics':^60}")
     print(f"  {'-'*60}")
@@ -163,14 +161,14 @@ def print_metrics(m: dict) -> None:
     print(f"  Avg Precision (PR-AUC)   : {m['avg_precision']:.4f}")
     print(f"  Brier Score              : {m['brier']:.4f}")
     print(f"  Log Loss                 : {m['log_loss']:.4f}")
-    
+
     # Business metrics
     print(f"\n  {'Business Impact':^60}")
     print(f"  {'-'*60}")
     print(f"  Business Cost            : ${m['business_cost']:,.0f}")
     print(f"  Cost Savings vs Random   : {m['cost_savings_pct']:.1f}%")
     print(f"  Default Loss Prevented   : {m['profit_score']:.1f}%")
-    
+
     # Confusion matrix
     print(f"\n  {'Confusion Matrix':^60}")
     print(f"  {'-'*60}")
@@ -178,16 +176,16 @@ def print_metrics(m: dict) -> None:
     print(f"  False Positives (FP)     : {m['fp']:,}")
     print(f"  False Negatives (FN)     : {m['fn']:,}")
     print(f"  True Positives  (TP)     : {m['tp']:,}")
-    
+
     # Decision threshold
     print(f"\n  {'Decision Threshold':^60}")
     print(f"  {'-'*60}")
     print(f"  Threshold                : {m['threshold']:.4f}")
-    
+
     print("=" * 65)
 
 
-# 9-panel results dashboard  
+# 9-panel results dashboard
 
 def plot_dashboard(
     m: dict,
@@ -213,7 +211,7 @@ def plot_dashboard(
     fig = plt.figure(figsize=(22, 18))
     gs  = gridspec.GridSpec(3, 3, figure=fig, hspace=0.40, wspace=0.35)
 
-    #  1. ROC Curve 
+    #  1. ROC Curve
     ax1 = fig.add_subplot(gs[0, 0])
     ax1.plot(fpr_arr, tpr_arr, lw=2.5, color="#2563EB",
              label=f"LightGBM AUC={m['roc_auc']:.3f}")
@@ -224,9 +222,10 @@ def plot_dashboard(
     ax1.text(ks_fpr + 0.02, (ks_tpr + ks_fpr) / 2,
              f"KS={m['ks_statistic']:.3f}", color="red", fontsize=10)
     ax1.set(xlabel="FPR", ylabel="TPR", title="ROC Curve")
-    ax1.legend(fontsize=9); ax1.grid(alpha=0.3)
+    ax1.legend(fontsize=9)
+    ax1.grid(alpha=0.3)
 
-    #  2. Precision-Recall Curve 
+    #  2. Precision-Recall Curve
     ax2 = fig.add_subplot(gs[0, 1])
     pr_prec, pr_rec, _ = precision_recall_curve(y_true, y_proba)
     ax2.plot(pr_rec, pr_prec, lw=2.5, color="#16A34A",
@@ -236,27 +235,30 @@ def plot_dashboard(
     ax2.axhline(m["precision"], color="blue", ls=":", alpha=0.7,
                 label=f"Op.Prec={m['precision']:.3f}")
     ax2.set(xlabel="Recall", ylabel="Precision", title="Precision-Recall Curve")
-    ax2.legend(fontsize=8); ax2.grid(alpha=0.3)
+    ax2.legend(fontsize=8)
+    ax2.grid(alpha=0.3)
 
-    #  3. KS Separation Plot 
+    #  3. KS Separation Plot
     ax3 = fig.add_subplot(gs[0, 2])
     ax3.plot(thr_arr, tpr_arr, color="#2563EB", lw=2, label="TPR (Sensitivity)")
     ax3.plot(thr_arr, fpr_arr, color="#DC2626", lw=2, label="FPR (1-Specificity)")
     ax3.axvline(m["ks_threshold"], color="green", ls="--", lw=1.5,
                 label=f"KS={m['ks_statistic']:.3f} @ {m['ks_threshold']:.3f}")
     ax3.set(xlabel="Threshold", ylabel="Rate", title="KS Separation Plot")
-    ax3.legend(fontsize=9); ax3.grid(alpha=0.3)
+    ax3.legend(fontsize=9)
+    ax3.grid(alpha=0.3)
 
-    #  4. Lift Curve by Decile 
+    #  4. Lift Curve by Decile
     ax4 = fig.add_subplot(gs[1, 0])
     deciles = list(range(1, 11))
     ax4.bar(deciles, m["lift_by_decile"], color="#7C3AED", alpha=0.8, edgecolor="white")
     ax4.axhline(1.0, color="gray", ls="--", lw=1.5, label="Random baseline")
     ax4.set(xlabel="Decile", ylabel="Lift", title="Lift Curve by Decile",
             xticks=deciles, xticklabels=[f"{d*10}%" for d in deciles])
-    ax4.legend(fontsize=9); ax4.grid(axis="y", alpha=0.3)
+    ax4.legend(fontsize=9)
+    ax4.grid(axis="y", alpha=0.3)
 
-    #  5. Confusion Matrix 
+    #  5. Confusion Matrix
     ax5 = fig.add_subplot(gs[1, 1])
     cm_arr = np.array([[m["tn"], m["fp"]], [m["fn"], m["tp"]]])
     sns.heatmap(cm_arr, annot=True, fmt=",d", cmap="Blues", ax=ax5,
@@ -265,7 +267,7 @@ def plot_dashboard(
                 annot_kws={"size": 13})
     ax5.set_title(f"Confusion Matrix\n(threshold={threshold:.3f})")
 
-    #  6. Score Distribution 
+    #  6. Score Distribution
     ax6 = fig.add_subplot(gs[1, 2])
     ax6.hist(y_proba[y_true == 0], bins=60, alpha=0.6, color="#16A34A",
              label="Good (0)", density=True)
@@ -275,17 +277,19 @@ def plot_dashboard(
                 label=f"Threshold={threshold:.3f}")
     ax6.set(xlabel="Predicted Probability", ylabel="Density",
             title="Score Distribution by Class")
-    ax6.legend(fontsize=9); ax6.grid(alpha=0.3)
+    ax6.legend(fontsize=9)
+    ax6.grid(alpha=0.3)
 
-    #  7. Business Cost Curve 
+    #  7. Business Cost Curve
     ax7 = fig.add_subplot(gs[2, 0])
     ax7.plot(thresholds, costs / 1e6, color="#EA580C", lw=2.5)
     ax7.axvline(threshold, color="black", ls="--", lw=1.5,
                 label=f"Optimal t={threshold:.3f}")
     ax7.set(xlabel="Threshold", ylabel="Cost ($M)", title="Business Cost vs Threshold")
-    ax7.legend(fontsize=9); ax7.grid(alpha=0.3)
+    ax7.legend(fontsize=9)
+    ax7.grid(alpha=0.3)
 
-    #  8. Recall / Precision / F2 vs Threshold 
+    #  8. Recall / Precision / F2 vs Threshold
     ax8 = fig.add_subplot(gs[2, 1])
     ax8.plot(thresholds, recalls_sw, color="#2563EB", lw=2, label="Recall")
     ax8.plot(thresholds, precs_sw,   color="#DC2626", lw=2, label="Precision")
@@ -295,9 +299,10 @@ def plot_dashboard(
     ax8.axhspan(0.70, 0.85, alpha=0.10, color="red",   label="Precision target")
     ax8.set(xlabel="Threshold", ylabel="Score",
             title="Recall / Precision / F2 vs Threshold", ylim=[0, 1])
-    ax8.legend(fontsize=8); ax8.grid(alpha=0.3)
+    ax8.legend(fontsize=8)
+    ax8.grid(alpha=0.3)
 
-    #  9. Feature Importance (top 15) 
+    #  9. Feature Importance (top 15)
     ax9 = fig.add_subplot(gs[2, 2])
     fi = (
         pd.DataFrame({"feature": feature_names, "importance": feature_importances})
@@ -321,18 +326,18 @@ def plot_dashboard(
 
 # Main
 
-def evaluate(model_path: str, threshold_override: float | None = None) -> dict:
+def evaluate(model_path: str, threshold_override: float | None = None) -> dict:  # noqa: C901
     logger.info("=" * 70)
     logger.info("EVALUATION PIPELINE  —  Full Metrics Suite")
     logger.info("=" * 70)
 
-    #  Load data 
+    #  Load data
     logger.info("Loading test data …")
     X_test = pd.read_csv("data/processed/X_test.csv")
     y_test = pd.read_csv("data/processed/y_test.csv").iloc[:, 0].values
     logger.info(f"Test set : {X_test.shape[0]:,} samples, {X_test.shape[1]} features")
 
-    #  Load model 
+    #  Load model
     logger.info(f"Loading model from {model_path} …")
     if not os.path.exists(model_path):
         logger.error(f"Model not found : {model_path}")
@@ -356,8 +361,8 @@ def evaluate(model_path: str, threshold_override: float | None = None) -> dict:
         sweep     = None
         logger.warning(f"threshold.json not found — defaulting to {threshold}")
 
-        
-    #  Load main run ID from training 
+
+    #  Load main run ID from training
     main_run_id = None
     run_id_path = "data/processed/main_run_id.txt"
     if os.path.exists(run_id_path):
@@ -368,20 +373,20 @@ def evaluate(model_path: str, threshold_override: float | None = None) -> dict:
         logger.warning("No main run ID found. Metrics will be logged to separate run.")
 
 
-    #  Predict 
+    #  Predict
     y_proba = model.predict_proba(X_test)[:, 1]
 
-    #  Full metrics 
+    #  Full metrics
     m = compute_metrics(y_test, y_proba, threshold)
     print_metrics(m)
 
-    #  Save metrics JSON 
+    #  Save metrics JSON
     export = {k: v for k, v in m.items() if not k.startswith("_")}
     with open("reports/metrics_full.json", "w") as f:
         json.dump(export, f, indent=2)
     logger.info("Full metrics saved : reports/metrics_full.json")
 
-    #  Dashboard 
+    #  Dashboard
     if sweep is None:
         # Reconstruct a minimal sweep dict if not available
         thr_range = np.arange(0.10, 0.90, 0.005)
@@ -397,11 +402,11 @@ def evaluate(model_path: str, threshold_override: float | None = None) -> dict:
     fi_names = X_test.columns.tolist()
     plot_dashboard(m, y_test, y_proba, fi_names, fi_arr, sweep)
 
-    #  MLflow logging 
+    #  MLflow logging
     mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", ""))
     try:
         mlflow.set_experiment("phase_2_lending_club")
-        
+
         # Use main run if available, otherwise create separate run
         if main_run_id:
             with mlflow.start_run(run_id=main_run_id, nested=True):
@@ -427,18 +432,18 @@ def evaluate(model_path: str, threshold_override: float | None = None) -> dict:
                     "fn": m["fn"],
                     "tp": m["tp"],
                 })
-                
+
                 # Log parameters
                 mlflow.log_param("model_type", "lightgbm")
                 mlflow.log_param("threshold", threshold)
                 mlflow.log_param("test_samples", m["n_total"])
                 mlflow.log_param("n_features", X_test.shape[1])
-                
+
                 # Log artifacts
                 for artefact in ["reports/metrics_full.json", "reports/results_dashboard.png"]:
                     if os.path.exists(artefact):
                         mlflow.log_artifact(artefact)
-                
+
                 # Log ROC curve (create and save)
                 from sklearn.metrics import roc_curve
                 fpr, tpr, _ = roc_curve(y_test, y_proba)
@@ -453,7 +458,7 @@ def evaluate(model_path: str, threshold_override: float | None = None) -> dict:
                 plt.savefig("/tmp/eval_roc.png", dpi=150)
                 plt.close()
                 mlflow.log_artifact("/tmp/eval_roc.png")
-                
+
             logger.info(f"Evaluation metrics logged to main run: {main_run_id}")
         else:
             with mlflow.start_run(run_name="evaluation", nested=False):
@@ -479,18 +484,18 @@ def evaluate(model_path: str, threshold_override: float | None = None) -> dict:
                     "fn": m["fn"],
                     "tp": m["tp"],
                 })
-                
+
                 # Log parameters
                 mlflow.log_param("model_type", "lightgbm")
                 mlflow.log_param("threshold", threshold)
                 mlflow.log_param("test_samples", m["n_total"])
                 mlflow.log_param("n_features", X_test.shape[1])
-                
+
                 # Log artifacts
                 for artefact in ["reports/metrics_full.json", "reports/results_dashboard.png"]:
                     if os.path.exists(artefact):
                         mlflow.log_artifact(artefact)
-                
+
                 # Log ROC curve (create and save)
                 from sklearn.metrics import roc_curve
                 fpr, tpr, _ = roc_curve(y_test, y_proba)
@@ -505,7 +510,7 @@ def evaluate(model_path: str, threshold_override: float | None = None) -> dict:
                 plt.savefig("/tmp/eval_roc.png", dpi=150)
                 plt.close()
                 mlflow.log_artifact("/tmp/eval_roc.png")
-                
+
             logger.info("Evaluation metrics logged to separate run")
     except Exception as e:
         logger.warning(f"MLflow logging failed (non-fatal): {e}")

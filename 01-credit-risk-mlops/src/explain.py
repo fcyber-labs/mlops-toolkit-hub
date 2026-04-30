@@ -24,7 +24,6 @@ from config.logging_config import logger
 warnings.filterwarnings("ignore")
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.logging_config import logger
 
 load_dotenv()
 
@@ -35,7 +34,7 @@ os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 os.makedirs("reports", exist_ok=True)
 
 
-#  MLflow setup 
+#  MLflow setup
 load_dotenv()
 os.environ["MLFLOW_TRACKING_URI"] = os.getenv("MLFLOW_TRACKING_URI", "")
 os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("MLFLOW_TRACKING_USERNAME", "")
@@ -46,12 +45,12 @@ mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", ""))
 
 # Main
 
-def explain(model_path: str, sample_size: int = 2000) -> None:
+def explain(model_path: str, sample_size: int = 2000) -> None:  # noqa: C901
     logger.info("=" * 70)
     logger.info("EXPLAINABILITY PIPELINE  —  SHAP Analysis")
     logger.info("=" * 70)
 
-    #  Load test data 
+    #  Load test data
     logger.info("Loading test data …")
     X_test = pd.read_csv("data/processed/X_test.csv")
     logger.info(f"Test data : {X_test.shape[0]:,} samples, {X_test.shape[1]} features")
@@ -60,7 +59,7 @@ def explain(model_path: str, sample_size: int = 2000) -> None:
     X_sample = X_test.sample(n=n, random_state=42)
     logger.info(f"SHAP sample : {n:,} rows")
 
-    #  Load model 
+    #  Load model
     logger.info(f"Loading model from {model_path} …")
     if not os.path.exists(model_path):
         logger.error(f"Model not found at {model_path}")
@@ -71,7 +70,7 @@ def explain(model_path: str, sample_size: int = 2000) -> None:
     booster = model.booster_ if hasattr(model, "booster_") else model
     logger.info("Using LightGBM booster for TreeExplainer")
 
-    #  Load main run ID from training 
+    #  Load main run ID from training
     main_run_id = None
     run_id_path = "data/processed/main_run_id.txt"
     if os.path.exists(run_id_path):
@@ -81,13 +80,13 @@ def explain(model_path: str, sample_size: int = 2000) -> None:
     else:
         logger.warning("No main run ID found. SHAP artifacts will be logged to separate run.")
 
-    #  SHAP values 
+    #  SHAP values
     logger.info("Computing SHAP values (this may take ~1 min for 2 k rows) …")
     try:
         explainer   = shap.TreeExplainer(booster)
         shap_values = explainer.shap_values(X_sample)
 
-        # Binary classification: shap_values is a list 
+        # Binary classification: shap_values is a list
         if isinstance(shap_values, list):
             shap_values = shap_values[1]
             logger.info("Binary classifier — using class-1 SHAP values")
@@ -121,7 +120,7 @@ def explain(model_path: str, sample_size: int = 2000) -> None:
     except Exception as e:
         logger.warning(f"Combined SHAP plot failed: {e}")
 
-    #  2. Standalone summary 
+    #  2. Standalone summary
     try:
         plt.figure(figsize=(12, 10))
         shap.summary_plot(shap_values, X_sample, show=False, max_display=20)
@@ -132,7 +131,7 @@ def explain(model_path: str, sample_size: int = 2000) -> None:
     except Exception as e:
         logger.warning(f"Standalone summary plot failed: {e}")
 
-    #  3. Bar chart 
+    #  3. Bar chart
     try:
         plt.figure(figsize=(10, 8))
         shap.summary_plot(
@@ -145,7 +144,7 @@ def explain(model_path: str, sample_size: int = 2000) -> None:
     except Exception as e:
         logger.warning(f"Bar plot failed: {e}")
 
-    #  4. Feature importance CSV 
+    #  4. Feature importance CSV
     mean_abs_shap = np.abs(shap_values).mean(axis=0)
     fi = (
         pd.DataFrame(
@@ -161,7 +160,7 @@ def explain(model_path: str, sample_size: int = 2000) -> None:
     for i, row in fi.head(10).iterrows():
         logger.info(f"  {i+1:2d}. {row['feature']:<30} {row['shap_importance']:.4f}")
 
-    #  5. Dependence plots for top-3 features 
+    #  5. Dependence plots for top-3 features
     for feat in fi.head(3)["feature"].tolist():
         if feat not in X_sample.columns:
             continue
@@ -178,11 +177,11 @@ def explain(model_path: str, sample_size: int = 2000) -> None:
         except Exception as e:
             logger.warning(f"Dependence plot for {feat} failed: {e}")
 
-    #  MLflow logging 
+    #  MLflow logging
     mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", ""))
     try:
         mlflow.set_experiment("phase_2_lending_club")
-        
+
         # Use main run if available, otherwise create separate run
         if main_run_id:
             with mlflow.start_run(run_id=main_run_id, nested=True):
@@ -229,7 +228,7 @@ def explain(model_path: str, sample_size: int = 2000) -> None:
     except Exception as e:
         logger.warning(f"MLflow logging failed (non-fatal): {e}")
 
-    #  Summary 
+    #  Summary
     logger.info("=" * 70)
     logger.info("EXPLAINABILITY SUMMARY")
     logger.info("=" * 70)

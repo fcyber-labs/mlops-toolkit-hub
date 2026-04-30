@@ -5,9 +5,9 @@ Lending Club Credit Risk — Preprocessing Pipeline
 
 """
 
+
 import os
 import gc
-import sys
 import json
 import joblib
 import warnings
@@ -18,12 +18,12 @@ import yaml
 from sklearn.preprocessing import LabelEncoder, PowerTransformer
 from sklearn.feature_selection import SelectKBest, mutual_info_classif
 from sklearn.model_selection import train_test_split
-
-warnings.filterwarnings("ignore")
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.logging_config import logger
+warnings.filterwarnings("ignore")
 
-#  Constants 
+
+#  Constants
 RANDOM_STATE = 42
 CHUNK_SIZE   = 500_000
 
@@ -41,16 +41,16 @@ FEATURE_COLS = [
 
 
 
-# Feature engineering  
+# Feature engineering
 
-def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, dict]:
+def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, dict]:  # noqa: C901
     """
     Apply all v6 feature engineering in-place.
     Returns (transformed_df, label_encoder_dict).
     """
     df = df.copy()
 
-    #  1. Basic type / string cleaning 
+    #  1. Basic type / string cleaning
     if "term" in df.columns:
         df["term"] = df["term"].astype(str).str.extract(r"(\d+)").astype(float)
 
@@ -69,12 +69,12 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
             df["emp_length"].astype(str).str.extract(r"(\d+)").astype(float).fillna(0)
         )
 
-    #  2. FICO midpoint 
+    #  2. FICO midpoint
     if "fico_range_low" in df.columns and "fico_range_high" in df.columns:
         df["fico_score"] = (df["fico_range_low"] + df["fico_range_high"]) / 2
         df.drop(["fico_range_low", "fico_range_high"], axis=1, inplace=True)
 
-    #  3. Credit history length (months since earliest credit line) 
+    #  3. Credit history length (months since earliest credit line)
     if "earliest_cr_line" in df.columns:
         df["earliest_cr_line"] = pd.to_datetime(df["earliest_cr_line"], errors="coerce")
         ref_date = pd.Timestamp("2018-12-01")
@@ -83,7 +83,7 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
         )
         df.drop("earliest_cr_line", axis=1, inplace=True)
 
-    #  4. Grade / sub_grade ordinal encoding 
+    #  4. Grade / sub_grade ordinal encoding
     # sub_grade A1→G5 maps to 1→35
     if "sub_grade" in df.columns:
         order = [g + str(n) for g in "ABCDEFG" for n in range(1, 6)]
@@ -96,12 +96,12 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
         df["grade_enc"] = df["grade"].map(grade_map).fillna(4)
         df.drop("grade", axis=1, inplace=True)
 
-    #  5. Numeric imputation (median) 
+    #  5. Numeric imputation (median)
     for col in df.select_dtypes(include=[np.number]).columns:
         if col != target_col:
             df[col] = df[col].fillna(df[col].median())
 
-    #  6. mort_acc smart fill 
+    #  6. mort_acc smart fill
     if "mort_acc" in df.columns and "total_acc" in df.columns:
         fill_map = df.groupby("total_acc")["mort_acc"].median()
         df["mort_acc"] = df.apply(
@@ -110,7 +110,7 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
             axis=1,
         )
 
-    #  7. Categorical label encoding 
+    #  7. Categorical label encoding
     cat_cols = [c for c in df.select_dtypes(include="object").columns if c != target_col]
     le_dict: dict[str, LabelEncoder] = {}
     for col in cat_cols:
@@ -118,7 +118,7 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
         df[col] = le.fit_transform(df[col].astype(str))
         le_dict[col] = le
 
-    #  8. Core financial ratios 
+    #  8. Core financial ratios
     if "loan_amnt" in df.columns and "annual_inc" in df.columns:
         df["loan_income_ratio"] = df["loan_amnt"] / (df["annual_inc"] + 1)
 
@@ -128,14 +128,14 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
     if "installment" in df.columns and "loan_amnt" in df.columns:
         df["payment_rate"] = df["installment"] / (df["loan_amnt"] + 1)
 
-    #  9. Credit utilisation 
+    #  9. Credit utilisation
     if "revol_bal" in df.columns and "open_acc" in df.columns:
         df["revol_util_per_acc"] = df["revol_bal"] / (df["open_acc"] + 1)
 
     if "revol_bal" in df.columns and "annual_inc" in df.columns:
         df["revol_bal_income_ratio"] = df["revol_bal"] / (df["annual_inc"] + 1)
 
-    #  10. Risk interactions 
+    #  10. Risk interactions
     if "int_rate" in df.columns and "dti" in df.columns:
         df["int_rate_x_dti"] = df["int_rate"] * df["dti"]
 
@@ -151,7 +151,7 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
     if "sub_grade_enc" in df.columns and "dti" in df.columns:
         df["sub_grade_x_dti"] = df["sub_grade_enc"] * df["dti"]
 
-    #  11. Credit bureau derogatory signal 
+    #  11. Credit bureau derogatory signal
     df["derogatory_score"] = df.get("delinq_2yrs", pd.Series(0, index=df.index))
     if "pub_rec" in df.columns:
         df["derogatory_score"] += df["pub_rec"] * 2
@@ -161,7 +161,7 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
     if "open_acc" in df.columns and "total_acc" in df.columns:
         df["open_acc_ratio"] = df["open_acc"] / (df["total_acc"] + 1)
 
-    #  12. Log transforms (reduce skew) 
+    #  12. Log transforms (reduce skew)
     for raw, log in [
         ("loan_amnt",   "log_loan_amnt"),
         ("annual_inc",  "log_annual_inc"),
@@ -173,7 +173,7 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
     if "revol_bal" in df.columns:
         df["log_revol_bal"] = np.log1p(df["revol_bal"] + 1)
 
-    #  13. FICO risk tiers 
+    #  13. FICO risk tiers
     if "fico_score" in df.columns:
         df["fico_tier"] = pd.cut(
             df["fico_score"],
@@ -182,7 +182,7 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
             ordered=True,
         ).astype(float).fillna(2)
 
-    #  14. Composite risk score 
+    #  14. Composite risk score
     required_risk = ["sub_grade_enc", "dti", "loan_income_ratio", "derogatory_score", "fico_score"]
     if all(c in df.columns for c in required_risk):
         df["composite_risk"] = (
@@ -193,7 +193,7 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
             + (1 - df["fico_score"].clip(580, 820) / 820) * 0.15
         )
 
-    #  15. Outlier clipping 
+    #  15. Outlier clipping
     clip_rules = {
         "dti": (0, 50), "annual_inc": (0, 300_000), "revol_bal": (0, 300_000),
         "revol_util": (0, 120), "open_acc": (0, 40), "total_acc": (0, 80),
@@ -229,7 +229,7 @@ def preprocess(input_path: str, output_path: str) -> None:
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
     os.makedirs("data/processed", exist_ok=True)
 
-    #  Load raw CSV in chunks 
+    #  Load raw CSV in chunks
     logger.info(f"Loading data in {CHUNK_SIZE:,}-row chunks …")
     chunks, total_rows = [], 0
 
@@ -269,7 +269,7 @@ def preprocess(input_path: str, output_path: str) -> None:
 
     X = _clean_col_names(X)
 
-    #  Optional: Yeo-Johnson power transform on highly skewed features 
+    #  Optional: Yeo-Johnson power transform on highly skewed features
     skewed = [c for c in X.columns if X[c].skew() > 1.0]
     if skewed:
         pt = PowerTransformer(method="yeo-johnson")
@@ -285,7 +285,7 @@ def preprocess(input_path: str, output_path: str) -> None:
     X = pd.DataFrame(X_sel, columns=selected_features)
     logger.info(f"Feature selection : {k} of {X.shape[1] + (X.shape[1] - k)} kept")
 
-    #  70 / 15 / 15 stratified split 
+    #  70 / 15 / 15 stratified split
     X_train, X_temp, y_train, y_temp = train_test_split(
         X, y, test_size=0.30, stratify=y, random_state=RANDOM_STATE
     )
@@ -303,7 +303,7 @@ def preprocess(input_path: str, output_path: str) -> None:
     )
     logger.info(f"scale_pos_weight : {pos_weight:.2f}")
 
-    #  Save processed splits 
+    #  Save processed splits
     X_train.to_csv("data/processed/X_train_full.csv", index=False)
     y_train.to_csv("data/processed/y_train_full.csv", index=False)
     X_val.to_csv("data/processed/X_val.csv", index=False)
@@ -311,7 +311,7 @@ def preprocess(input_path: str, output_path: str) -> None:
     X_test.to_csv("data/processed/X_test.csv", index=False)
     pd.DataFrame(y_test.values, columns=["risk"]).to_csv("data/processed/y_test.csv", index=False)
 
-    #  Save artefacts 
+    #  Save artefacts
     joblib.dump(selector,          "data/processed/feature_selector.pkl")
     joblib.dump(selected_features, "data/processed/selected_features.pkl")
     joblib.dump(le_dict,           "data/processed/label_encoders.pkl")
@@ -336,7 +336,7 @@ def preprocess(input_path: str, output_path: str) -> None:
     df_out[target_col] = y.values
     df_out.to_csv(output_path, index=False)
 
-    logger.info(f"All artefacts saved to data/processed/")
+    logger.info("All artefacts saved to data/processed/")
     logger.info(f"Preprocessed dataset : {output_path}")
     logger.info("Preprocessing complete ✓")
 

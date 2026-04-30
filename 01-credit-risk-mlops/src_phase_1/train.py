@@ -12,14 +12,14 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from itertools import product as iproduct
 
-warnings.filterwarnings("ignore")
+
 sys.path.append(".")
 from config.logging_config import logger
 
 from dotenv import load_dotenv
 load_dotenv()
 
-from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.model_selection import StratifiedKFold
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
@@ -37,8 +37,7 @@ from optuna.samplers import TPESampler
 
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
-import os
-
+warnings.filterwarnings("ignore")
 
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
@@ -50,11 +49,10 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 os.environ["KMP_INIT_AT_FORK"] = "FALSE"
 
 
-import lightgbm as lgb
 
 
 
-#  params 
+#  params
 params_all    = yaml.safe_load(open("params.yaml"))
 train_params  = params_all["train"]
 
@@ -66,7 +64,7 @@ COST_MATRIX     = {"FP": 1, "FN": 5, "TP": 0, "TN": 0}
 EXPERIMENT_NAME = "phase_1_credit_risk"
 REGISTERED_MODEL_NAME = "CreditRisk_SoftVoting_v3"
 
-#  MLflow  
+#  MLflow
 os.environ["MLFLOW_TRACKING_URI"]      = os.getenv("MLFLOW_TRACKING_URI", "")
 os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("MLFLOW_TRACKING_USERNAME", "")
 os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("MLFLOW_TRACKING_PASSWORD", "")
@@ -79,7 +77,7 @@ except Exception:
 mlflow.set_experiment(EXPERIMENT_NAME)
 
 
-#  scoring helpers 
+#  scoring helpers
 def composite_score(y_true, y_pred_proba, threshold=0.277):
     """0.6·recall + 0.25·AUC + 0.15·(1-Brier) at recall-biased threshold."""
     y_pred = (y_pred_proba >= threshold).astype(int)
@@ -119,7 +117,7 @@ def evaluate_at_threshold(threshold, y_true, y_proba):
     }
 
 
-#  Optuna objectives 
+#  Optuna objectives
 def lgb_objective(trial, X_res, y_res):
     params = {
         "n_estimators":      trial.suggest_int("n_estimators", 200, 800),
@@ -179,13 +177,13 @@ def xgb_objective(trial, X_res, y_res):
     return float(np.mean(scores))
 
 
-#  main training function 
-def train(model_path: str):
+#  main training function
+def train(model_path: str) -> None:  # noqa: C901
     logger.info("*" * 70)
     logger.info("TRAINING PIPELINE v3 — SOFT VOTING ENSEMBLE")
     logger.info("*" * 70)
 
-    # load resampled train &andtest produced 
+    # load resampled train &andtest produced
     X_resampled = pd.read_csv("data/processed/X_train_resampled.csv")
     y_resampled = pd.read_csv("data/processed/y_train_resampled.csv").iloc[:, 0]
     X_test      = pd.read_csv("data/processed/X_test.csv")
@@ -194,7 +192,7 @@ def train(model_path: str):
     logger.info(f"Resampled train: {X_resampled.shape} | Test: {X_test.shape}")
     logger.info(f"Resampled imbalance: {y_resampled.mean():.2%}")
 
-    #  LightGBM Optuna 
+    #  LightGBM Optuna
     logger.info("Optimizing LightGBM (%d trials)...", N_OPTUNA_TRIALS)
     study_lgb = optuna.create_study(
         direction="maximize",
@@ -211,7 +209,7 @@ def train(model_path: str):
     logger.success(f"LightGBM best score: {study_lgb.best_value:.4f}")
     logger.info(f"scale_pos_weight: {best_lgb_params['scale_pos_weight']:.2f}")
 
-    #  XGBoost Optuna 
+    #  XGBoost Optuna
     logger.info("Optimizing XGBoost (%d trials)...", N_OPTUNA_TRIALS)
     study_xgb = optuna.create_study(
         direction="maximize",
@@ -231,7 +229,7 @@ def train(model_path: str):
     }
     logger.success(f"XGBoost best score: {study_xgb.best_value:.4f}")
 
-    #  train all base models 
+    #  train all base models
     logger.info("Training base models on full resampled data...")
 
     lgb_opt = LGBMClassifier(**best_lgb_params)
@@ -268,7 +266,7 @@ def train(model_path: str):
     et_model.fit(X_resampled, y_resampled)
     logger.info("  ExtraTrees ✓")
 
-    #  weight search 
+    #  weight search
     base_probas = {
         "lgb_opt":    lgb_opt.predict_proba(X_test)[:, 1],
         "lgb_recall": lgb_recall.predict_proba(X_test)[:, 1],
@@ -292,7 +290,7 @@ def train(model_path: str):
                 {n: round(float(w), 3) for n, w in zip(model_names, best_weights)})
     logger.info(f"Blend composite score: {best_w_score:.4f}")
 
-    #  threshold optimization 
+    #  threshold optimization
     thresholds = np.linspace(0.10, 0.65, 500)
     costs      = [total_cost(t, y_test, y_pred_proba_ensemble) for t in thresholds]
     optimal_threshold = thresholds[np.argmin(costs)]
@@ -310,7 +308,7 @@ def train(model_path: str):
     logger.info(f"Business-optimal threshold : {optimal_threshold:.3f}  cost={min(costs):.0f}")
     logger.info(f"Recall-optimal threshold   : {final_threshold:.3f}  (precision≥{MIN_PRECISION})")
 
-    #  evaluation 
+    #  evaluation
     results_default  = evaluate_at_threshold(0.50,             y_test, y_pred_proba_ensemble)
     results_cost_opt = evaluate_at_threshold(optimal_threshold, y_test, y_pred_proba_ensemble)
     results_recall   = evaluate_at_threshold(final_threshold,   y_test, y_pred_proba_ensemble)
@@ -325,7 +323,7 @@ def train(model_path: str):
     logger.info(f"  {'CONFUSION':20s}: TN={final_metrics['tn']} FP={final_metrics['fp']} "
                 f"FN={final_metrics['fn']} TP={final_metrics['tp']}")
 
-    #  plots 
+    #  plots
     os.makedirs("reports", exist_ok=True)
 
     fpr, tpr, _ = roc_curve(y_test, y_pred_proba_ensemble)
@@ -371,7 +369,7 @@ def train(model_path: str):
     plt.savefig("reports/feature_importance.png", dpi=150, bbox_inches="tight")
     plt.close()
 
-    #  save models & config 
+    #  save models & config
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
 
     pipeline_config = {
@@ -380,7 +378,7 @@ def train(model_path: str):
         "threshold":         float(final_threshold),
         "selected_features": X_test.columns.tolist(),
     }
-    joblib.dump(pipeline_config, model_path)          
+    joblib.dump(pipeline_config, model_path)
 
     for name, model in [
         ("lgb_opt", lgb_opt), ("lgb_recall", lgb_recall),
@@ -414,7 +412,7 @@ def train(model_path: str):
     with open("model_metadata.json", "w") as f:
         json.dump(model_metadata, f, indent=2)
 
-    #  MLflow 
+    #  MLflow
     logger.info("Logging to MLflow...")
     with mlflow.start_run(run_name="soft_voting_recall_v3") as run:
 
@@ -423,7 +421,7 @@ def train(model_path: str):
         with open("data/processed/main_run_id.txt", "w") as f:
             f.write(run.info.run_id)
 
-      
+
         # TAGS for  experiment UI
 
         mlflow.set_tag("pipeline_version", "3.0")
@@ -477,7 +475,7 @@ def train(model_path: str):
             "n_test_samples": y_test.shape[0],
             "blend_composite_score": round(best_w_score, 4),
         })
-        # metrics — all three threshold variants 
+        # metrics — all three threshold variants
         for prefix, res in [("recall_opt", results_recall),
                              ("cost_opt",   results_cost_opt),
                              ("default",    results_default)]:
@@ -519,7 +517,7 @@ def train(model_path: str):
         logger.success(f"MLflow run logged: {run.info.run_id}")
         logger.info(f"Registered model: {REGISTERED_MODEL_NAME}")
 
-    #  final summary 
+    #  final summary
     logger.info("*" * 70)
     logger.info("FINAL RESULTS SUMMARY v3.0")
     logger.info("*" * 70)
