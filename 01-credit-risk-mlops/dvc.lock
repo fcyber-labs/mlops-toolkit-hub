@@ -1,0 +1,212 @@
+schema: '2.0'
+stages:
+  preprocess:
+    cmd: python src_phase_1/preprocess.py
+    deps:
+    - path: data/raw/german_credit_data_risk.csv
+      hash: md5
+      md5: 3086216ff1ff32f7626554e730cccc91
+      size: 53393
+    - path: src_phase_1/preprocess.py
+      hash: md5
+      md5: e8b03ff914a6e831a6c36ccbcb5541fa
+      size: 12207
+    params:
+      params.yaml:
+        preprocess.input: data/raw/german_credit_data_risk.csv
+        preprocess.output: data/processed/features_german.csv
+        preprocess.random_state: 42
+    outs:
+    - path: data/processed/X_test.csv
+      hash: md5
+      md5: 33b4e40a559b9c29f71f1a3fedd7ea3a
+      size: 171002
+    - path: data/processed/X_train_resampled.csv
+      hash: md5
+      md5: 005d62a8c6efbfe0d1c02516d6b3afb2
+      size: 758152
+    - path: data/processed/features_german.csv
+      hash: md5
+      md5: 196261ee775b956196503e2f8cef464b
+      size: 864715
+    - path: data/processed/power_transformer.pkl
+      hash: md5
+      md5: 7e82e5c2443f2fe33b37c54ae6926151
+      size: 3085
+    - path: data/processed/preprocess_meta.json
+      hash: md5
+      md5: 6e2157281e0274d0a7f71b1969b83984
+      size: 2674
+    - path: data/processed/selected_features.pkl
+      hash: md5
+      md5: 4b2d9b0d85c80312f6454071dc1b0f96
+      size: 1192
+    - path: data/processed/y_test.csv
+      hash: md5
+      md5: 11fb94de1c9cf4b1dced14a5f6892468
+      size: 409
+    - path: data/processed/y_train_resampled.csv
+      hash: md5
+      md5: d6ddf269a2cbc510ab9cd6564ab7757a
+      size: 1763
+  train:
+    cmd: python src_phase_1/train.py
+    deps:
+    - path: data/processed/X_test.csv
+      hash: md5
+      md5: 33b4e40a559b9c29f71f1a3fedd7ea3a
+      size: 171002
+    - path: data/processed/X_train_resampled.csv
+      hash: md5
+      md5: 005d62a8c6efbfe0d1c02516d6b3afb2
+      size: 758152
+    - path: data/processed/y_test.csv
+      hash: md5
+      md5: 11fb94de1c9cf4b1dced14a5f6892468
+      size: 409
+    - path: data/processed/y_train_resampled.csv
+      hash: md5
+      md5: d6ddf269a2cbc510ab9cd6564ab7757a
+      size: 1763
+    - path: src_phase_1/train.py
+      hash: md5
+      md5: 8db32ff8ebc3c0456ea0a9af267d7d83
+      size: 22701
+    params:
+      params.yaml:
+        train.cv_folds: 5
+        train.min_precision: 0.4
+        train.model: models/lightgbm_credit_risk_model.pkl
+        train.n_trials: 75
+        train.random_state: 42
+    outs:
+    - path: model_metadata.json
+      hash: md5
+      md5: 71d69932eb8bd0c7cf8083ef54a40b02
+      size: 2155
+    - path: models/et.pkl
+      hash: md5
+      md5: 94ad56c86a06e9c3eb63b906e08fcad9
+      size: 11389577
+    - path: models/lgb_opt.pkl
+      hash: md5
+      md5: 12f0e53397e167db2b9b4bc6a02d474b
+      size: 400372
+    - path: models/lgb_opt.txt
+      hash: md5
+      md5: c8d99d9b9613db14c514a2bbef84e4b6
+      size: 398321
+    - path: models/lgb_recall.pkl
+      hash: md5
+      md5: 3ea167b98db17995727f7c4ae27e614d
+      size: 2483380
+    - path: models/rf.pkl
+      hash: md5
+      md5: 6fdd2fe0a9cf6fd294cc8de4e9b3ecf8
+      size: 7717753
+    - path: models/xgb.pkl
+      hash: md5
+      md5: 62f91196feb0d4f9b5409ee9fe2a6698
+      size: 542069
+  evaluate:
+    cmd: python src_phase_1/evaluate.py
+    deps:
+    - path: data/processed/X_test.csv
+      hash: md5
+      md5: 33b4e40a559b9c29f71f1a3fedd7ea3a
+      size: 171002
+    - path: data/processed/y_test.csv
+      hash: md5
+      md5: 11fb94de1c9cf4b1dced14a5f6892468
+      size: 409
+    - path: models/et.pkl
+      hash: md5
+      md5: 94ad56c86a06e9c3eb63b906e08fcad9
+      size: 11389577
+    - path: models/lgb_opt.pkl
+      hash: md5
+      md5: 12f0e53397e167db2b9b4bc6a02d474b
+      size: 400372
+    - path: models/lgb_recall.pkl
+      hash: md5
+      md5: 3ea167b98db17995727f7c4ae27e614d
+      size: 2483380
+    - path: models/rf.pkl
+      hash: md5
+      md5: 6fdd2fe0a9cf6fd294cc8de4e9b3ecf8
+      size: 7717753
+    - path: models/xgb.pkl
+      hash: md5
+      md5: 62f91196feb0d4f9b5409ee9fe2a6698
+      size: 542069
+    - path: src_phase_1/evaluate.py
+      hash: md5
+      md5: 231ea4ea19393be26756831878ab5bbd
+      size: 9159
+    params:
+      params.yaml:
+        train.model: models/lightgbm_credit_risk_model.pkl
+    outs:
+    - path: reports/classification_report.txt
+      hash: md5
+      md5: 3680c7500bc8a264e17c9fc3cf80e401
+      size: 389
+    - path: reports/confusion_matrix.txt
+      hash: md5
+      md5: ae6876707f86cf55afdde268c6950f1e
+      size: 214
+    - path: reports/metrics.json
+      hash: md5
+      md5: 0da967c208756e652b8db1cec70e6100
+      size: 393
+    - path: reports/pr_curve.png
+      hash: md5
+      md5: f36f3eefd233046f4d5d3d79e402196c
+      size: 51039
+    - path: reports/roc_curve.png
+      hash: md5
+      md5: bcd781b2703441d3ca0dc7e39e3c49ab
+      size: 60257
+  explain:
+    cmd: python src_phase_1/explain.py
+    deps:
+    - path: data/processed/X_test.csv
+      hash: md5
+      md5: 33b4e40a559b9c29f71f1a3fedd7ea3a
+      size: 171002
+    - path: models/lgb_opt.pkl
+      hash: md5
+      md5: 12f0e53397e167db2b9b4bc6a02d474b
+      size: 400372
+    - path: models/lgb_opt.txt
+      hash: md5
+      md5: c8d99d9b9613db14c514a2bbef84e4b6
+      size: 398321
+    - path: src_phase_1/explain.py
+      hash: md5
+      md5: 3d9f872805e08212a1ce9f0708b2e763
+      size: 9171
+    params:
+      params.yaml:
+        explain.output: reports/
+    outs:
+    - path: reports/shap_bar.png
+      hash: md5
+      md5: 788cb5cf8047057d5348577193c96822
+      size: 107076
+    - path: reports/shap_feature_importance.csv
+      hash: md5
+      md5: 753325a830783687b8502dcf2b3b64ed
+      size: 2272
+    - path: reports/shap_force_plot.png
+      hash: md5
+      md5: 06b105405b55d23b0f3b20dd82e8138c
+      size: 79774
+    - path: reports/shap_summary.png
+      hash: md5
+      md5: 9446dda2019aa6b8fc987eb75ef93feb
+      size: 194587
+    - path: reports/shap_waterfall_sample.png
+      hash: md5
+      md5: fd20551a1fec5416077c307283636a07
+      size: 94792

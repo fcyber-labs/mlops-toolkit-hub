@@ -1,0 +1,7 @@
+[core]
+    remote = origin
+[cache]
+    type = "hardlink,symlink"
+['remote "origin"']
+    url = s3://dvc
+    endpointurl = https://dagshub.com/fcyber/german-credit-mlops.s3

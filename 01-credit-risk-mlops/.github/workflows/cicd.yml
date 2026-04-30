@@ -1,0 +1,474 @@
+---
+name: CI/CD Pipeline - Full MLOps
+
+"on":
+  push:
+    branches: [main, develop, feature/*]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: 
+
+env:
+  PYTHON_VERSION: '3.10'
+  MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+  MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+  MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+
+jobs:
+  
+  # JOB 1: Lint & Format Check
+  
+  lint:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install linting tools
+        run: |
+          pip install flake8 black isort mypy
+
+      - name: Run isort (import sorting)
+        run: |
+          isort --check-only --diff src/ src_phase_1/ tests/
+
+      - name: Run Black (code formatting)
+        run: |
+          black --check --diff src/ src_phase_1/ tests/
+
+      - name: Run Flake8 (style guide)
+        run: |
+          flake8 src/ src_phase_1/ tests/ --max-line-length=120 --ignore=E203,W503,E501
+
+      - name: Run mypy (type checking - optional)
+        run: |
+          mypy src/ --ignore-missing-imports || true
+
+  
+  # JOB 2: Unit Tests (Phase 1, 2, 3)
+  
+  unit-tests:
+    name: Unit Tests - All Phases
+    runs-on: ubuntu-latest
+    needs: [lint]
+    timeout-minutes: 20
+
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov pytest-timeout pytest-mock
+          pip install -r requirements.txt
+
+      - name: Create test directories
+        run: |
+          mkdir -p data/processed models reports
+
+      - name: Create mock data for tests
+        run: |
+          python -c "
+          import pandas as pd
+          import numpy as np
+
+          mock_data = pd.DataFrame({
+              'Age': np.random.randint(20, 70, 100),
+              'Credit amount': np.random.randint(1000, 50000, 100),
+              'Duration': np.random.randint(12, 84, 100),
+              'Purpose': np.random.choice(['car', 'education', 'business'], 100),
+              'Risk': np.random.choice(['good', 'bad'], 100, p=[0.7, 0.3])
+          })
+          mock_data.to_csv('data/processed/X_test.csv', index=False)
+          mock_data['Risk'].to_csv('data/processed/y_test.csv', index=False)
+          "
+
+      - name: Run unit tests with coverage
+        run: |
+          pytest tests/test_unit/ -v \
+            --cov=src --cov=src_phase_1 \
+            --cov-report=xml --cov-report=term \
+            --timeout=60
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Store test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.python-version }}
+          path: |
+            .coverage
+            coverage.xml
+            pytest.log
+
+  
+  # JOB 3: Phase 1 Integration Test (German Credit)
+  
+  phase1-integration:
+    name: Phase 1 - German Credit Pipeline
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install dvc
+
+      - name: Create test data
+        run: |
+          mkdir -p data/raw data/processed models reports
+          python -c "
+          import pandas as pd
+          df = pd.DataFrame({
+              'Age': [25, 30, 35, 40, 45, 50, 55, 60],
+              'Sex': ['male', 'female', 'male', 'female', 'male', 'female', 'male', 'female'],
+              'Job': [2, 1, 3, 2, 1, 3, 2, 1],
+              'Housing': ['own', 'rent', 'own', 'free', 'own', 'rent', 'own', 'free'],
+              'Saving accounts': ['little', 'moderate', 'rich', 'little', 'unknown', 'moderate', 'rich', 'little'],
+              'Checking account': ['little', 'moderate', 'rich', 'little', 'unknown', 'moderate', 'rich', 'little'],
+              'Credit amount': [5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000],
+              'Duration': [12, 24, 36, 48, 60, 72, 84, 96],
+              'Purpose': ['car', 'education', 'business', 'car', 'education', 'business', 'car', 'education'],
+              'Risk': ['good', 'good', 'bad', 'good', 'bad', 'bad', 'good', 'bad']
+          })
+          df.to_csv('data/raw/german_credit_data_risk.csv', index=False)
+          "
+
+      - name: Run Phase 1 preprocessing
+        run: |
+          cp params_german.yaml params.yaml
+          python src_phase_1/preprocess.py
+
+      - name: Run Phase 1 training
+        run: |
+          python src_phase_1/train.py
+
+      - name: Run Phase 1 evaluation
+        run: |
+          python src_phase_1/evaluate.py
+
+      - name: Verify Phase 1 outputs
+        run: |
+          test -f models/model_german.pkl && echo " Model exists"
+          test -f reports/metrics.json && echo " Metrics exist"
+          test -f reports/roc_curve.png && echo " ROC curve exists"
+
+      - name: Archive Phase 1 artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase1-artifacts
+          path: |
+            models/model_german.pkl
+            reports/metrics.json
+            reports/roc_curve.png
+
+  
+  # JOB 4: Phase 2 Integration Test (LendingClub)
+  
+  phase2-integration:
+    name: Phase 2 - LendingClub Pipeline
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Create mock LendingClub data
+        run: |
+          mkdir -p data/raw/lendingclub data/processed models reports
+          python -c "
+          import pandas as pd
+          import numpy as np
+
+          np.random.seed(42)
+          n_samples = 1000
+
+          mock_data = pd.DataFrame({
+              'loan_status': np.random.choice(['Fully Paid', 'Charged Off'], n_samples, p=[0.8, 0.2]),
+              'loan_amnt': np.random.randint(1000, 40000, n_samples),
+              'term': np.random.choice(['36 months', '60 months'], n_samples),
+              'int_rate': np.random.uniform(5, 25, n_samples),
+              'annual_inc': np.random.randint(20000, 200000, n_samples),
+              'dti': np.random.uniform(0, 40, n_samples),
+              'grade': np.random.choice(['A', 'B', 'C', 'D', 'E', 'F', 'G'], n_samples),
+              'sub_grade': np.random.choice(['A1', 'B2', 'C3', 'D4', 'E5'], n_samples),
+              'fico_range_low': np.random.randint(600, 800, n_samples),
+              'fico_range_high': np.random.randint(650, 850, n_samples),
+              'emp_length': np.random.choice(['< 1 year', '2 years', '5 years', '10+ years'], n_samples),
+              'home_ownership': np.random.choice(['RENT', 'MORTGAGE', 'OWN'], n_samples),
+              'purpose': np.random.choice(['car', 'education', 'debt_consolidation', 'home_improvement'], n_samples),
+          })
+          mock_data.to_csv('data/raw/lendingclub/accepted_2007_to_2018Q4.csv', index=False)
+          "
+
+      - name: Run Phase 2 preprocessing
+        run: |
+          cp params_lending.yaml params.yaml
+          python src/preprocess.py
+
+      - name: Run Phase 2 training (reduced trials for CI)
+        run: |
+          sed -i 's/N_TRIALS = .*/N_TRIALS = 2/' src/train.py
+          python src/train.py
+
+      - name: Run Phase 2 evaluation
+        run: |
+          python src/evaluate.py
+
+      - name: Run Phase 2 explainability (optional)
+        run: |
+          python src/explain.py --n 50 || echo "SHAP skipped in CI"
+
+      - name: Verify Phase 2 outputs
+        run: |
+          test -f models/model_lending.pkl && echo " Model exists"
+          test -f reports/metrics_full.json && echo " Metrics exist"
+          test -f reports/results_dashboard.png && echo " Dashboard exists"
+
+      - name: Archive Phase 2 artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase2-artifacts
+          path: |
+            models/model_lending.pkl
+            reports/metrics_full.json
+            reports/results_dashboard.png
+
+  
+  # JOB 5: Phase 3 Integration Test (API & Streaming)
+  
+  phase3-integration:
+    name: Phase 3 - API & Streaming Tests
+    runs-on: ubuntu-latest
+    needs: [phase2-integration]
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-asyncio httpx
+
+      - name: Copy Phase 2 model for API tests
+        run: |
+          mkdir -p models
+          if [ ! -f models/model_lending.pkl ]; then
+            python -c "
+          import joblib
+          from sklearn.ensemble import RandomForestClassifier
+          import pandas as pd
+          import numpy as np
+          model = RandomForestClassifier(n_estimators=10)
+          X_dummy = pd.DataFrame(np.random.rand(100, 9))
+          y_dummy = np.random.randint(0, 2, 100)
+          model.fit(X_dummy, y_dummy)
+          joblib.dump(model, 'models/model_lending.pkl')
+          "
+          fi
+
+      - name: Start API server
+        run: |
+          python -m uvicorn src.api.app:app --host 127.0.0.1 --port 8000 &
+          sleep 5
+
+      - name: Test API endpoints
+        run: |
+          curl -f http://127.0.0.1:8000/health || exit 1
+          curl -X POST http://127.0.0.1:8000/predict \
+            -H "Content-Type: application/json" \
+            -d '{"age":35,"credit_amount":15000,"duration":36,"purpose":2,"income":50000,"emp_length":5,"housing":1,"dti":20,"int_rate":15}' \
+            | grep -q "prediction" || exit 1
+          echo " API tests passed"
+
+      - name: Run streaming generator tests
+        run: |
+          python -c "
+          from src.streaming.data_generator import LoanDataGenerator
+          from src.streaming.data_generator_german import GermanCreditDataGenerator
+          from src.streaming.drift_detector import DriftDetector
+          import pandas as pd
+          import numpy as np
+
+          gen = LoanDataGenerator()
+          gen.generate_stream(days=1, loans_per_day=5)
+          print(' LoanDataGenerator works')
+
+          gen_german = GermanCreditDataGenerator()
+          gen_german.generate_stream(days=1, loans_per_day=5)
+          print(' GermanCreditDataGenerator works')
+
+          ref_data = pd.DataFrame({'feature': np.random.normal(0, 1, 100)})
+          current_data = pd.DataFrame({'feature': np.random.normal(0.1, 1, 100)})
+          detector = DriftDetector(threshold=0.05)
+          detector.set_reference(ref_data)
+          report = detector.detect_all_drift(current_data)
+          print(' Drift detector works')
+          "
+
+      - name: Stop API server
+        run: |
+          pkill -f uvicorn || true
+
+      - name: Archive Phase 3 logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase3-logs
+          path: |
+            logs/
+            reports/drift_report.json
+
+  
+  # JOB 6: Docker Build Test
+  
+  docker-build:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: api
+          load: true
+          tags: credit-risk-api:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Trainer Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: trainer
+          load: true
+          tags: credit-risk-trainer:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test API container
+        run: |
+          docker run -d -p 8000:8000 --name test-api credit-risk-api:test
+          sleep 10
+          docker ps | grep test-api
+          docker stop test-api
+          docker rm test-api
+
+      - name: List Docker images
+        run: |
+          docker images | grep credit-risk
+
+  
+  # JOB 7: Security Scan 
+  
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    timeout-minutes: 10
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  
+  # JOB 8: Notify on completion
+  
+  notify:
+    name: Notify Completion
+    runs-on: ubuntu-latest
+    needs: [lint, unit-tests, phase1-integration, phase2-integration, phase3-integration, docker-build]
+    if: always()
+
+    steps:
+      - name: Check status
+        run: |
+          echo " CI Pipeline completed!"
+          echo "Lint:       ${{ needs.lint.result }}"
+          echo "Unit Tests: ${{ needs.unit-tests.result }}"
+          echo "Phase 1:    ${{ needs.phase1-integration.result }}"
+          echo "Phase 2:    ${{ needs.phase2-integration.result }}"
+          echo "Phase 3:    ${{ needs.phase3-integration.result }}"
+          echo "Docker:     ${{ needs.docker-build.result }}"

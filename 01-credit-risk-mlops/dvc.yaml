@@ -1,0 +1,82 @@
+stages:
+  preprocess:
+    cmd: python src_phase_1/preprocess.py
+    deps:
+      - src_phase_1/preprocess.py
+      - data/raw/german_credit_data_risk.csv
+    params:
+      - preprocess.input
+      - preprocess.output
+      - preprocess.random_state
+    outs:
+      - data/processed/features_german.csv
+      - data/processed/X_train_resampled.csv
+      - data/processed/y_train_resampled.csv
+      - data/processed/X_test.csv
+      - data/processed/y_test.csv
+      - data/processed/power_transformer.pkl
+      - data/processed/selected_features.pkl
+      - data/processed/preprocess_meta.json
+
+  train:
+    cmd: python src_phase_1/train.py
+    deps:
+      - src_phase_1/train.py
+      - data/processed/X_train_resampled.csv
+      - data/processed/y_train_resampled.csv
+      - data/processed/X_test.csv
+      - data/processed/y_test.csv
+    params:
+      - train.model
+      - train.random_state
+      - train.n_trials
+      - train.cv_folds
+      - train.min_precision
+    outs:
+      - models/lgb_opt.pkl
+      - models/lgb_recall.pkl
+      - models/xgb.pkl
+      - models/rf.pkl
+      - models/et.pkl
+      - models/lgb_opt.txt
+    metrics:
+      - model_metadata.json
+
+  evaluate:
+    cmd: python src_phase_1/evaluate.py
+    deps:
+      - src_phase_1/evaluate.py
+      - models/lgb_opt.pkl
+      - models/lgb_recall.pkl
+      - models/xgb.pkl
+      - models/rf.pkl
+      - models/et.pkl
+      - data/processed/X_test.csv
+      - data/processed/y_test.csv
+    params:
+      - train.model
+    metrics:
+      - reports/metrics.json
+    outs:
+      - reports/roc_curve.png
+      - reports/pr_curve.png
+      - reports/confusion_matrix.txt
+      - reports/classification_report.txt
+
+  explain:
+    cmd: python src_phase_1/explain.py
+    deps:
+      - src_phase_1/explain.py
+      - models/lgb_opt.pkl
+      - models/lgb_opt.txt
+      - data/processed/X_test.csv
+    params:
+      - explain.output
+    outs:
+      - reports/shap_summary.png
+      - reports/shap_bar.png
+      - reports/shap_feature_importance.csv
+      - reports/shap_waterfall_sample.png
+      - reports/shap_force_plot.png
+
+# RUN:   cp params_german.yaml params.yaml && dvc repro

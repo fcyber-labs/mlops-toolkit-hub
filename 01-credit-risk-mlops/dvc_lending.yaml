@@ -1,0 +1,47 @@
+
+# Phase 2: LendingClub Pipeline
+stages:
+  adapter:
+    cmd: python src/adapters/lendingclub_adapter.py
+    deps:
+      - data/raw/lendingclub/accepted_2007_to_2018Q4.csv
+      - src/adapters/lendingclub_adapter.py
+    outs:
+      - data/raw/pipeline_input.csv
+
+  preprocess:
+    cmd: python src/preprocess.py
+    deps:
+      - src/preprocess.py
+      - data/raw/pipeline_input.csv
+    outs:
+      - data/processed/features_lending.csv
+
+  train:
+    cmd: python src/train.py
+    deps:
+      - src/train.py
+      - data/processed/features_lending.csv
+    outs:
+      - models/model_lending.pkl
+      - data/processed/X_test.csv
+      - data/processed/y_test.csv
+
+  evaluate:
+    cmd: python src/evaluate.py
+    deps:
+      - src/evaluate.py
+      - models/model_lending.pkl
+      - data/processed/X_test.csv
+      - data/processed/y_test.csv
+    metrics:
+      - reports/metrics_lending.json
+    outs:
+      - reports/roc_curve_lending.png
+
+
+
+# Run Phase 2 (LendingClub)
+#  dvc repro dvc_lending.yaml
+
+# ./run_full_lending_pipeline.sh

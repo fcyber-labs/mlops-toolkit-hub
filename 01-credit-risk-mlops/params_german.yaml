@@ -1,0 +1,27 @@
+# German Credit Configuration
+dataset: german_credit
+
+preprocess:
+  input: data/raw/german_credit_data_risk.csv
+  output: data/processed/features_german.csv
+  random_state: 42          
+
+train:
+  data: data/processed/features_german.csv
+  model: models/lightgbm_credit_risk_model.pkl
+  random_state: 42         
+  n_trials: 75           
+  cv_folds: 5             
+  min_precision: 0.40      
+
+evaluate:
+  metrics: reports/metrics.json
+  roc_curve: reports/roc_curve.png
+  confusion_matrix: reports/confusion_matrix.txt
+  classification_report: reports/classification_report.txt
+
+explain:
+  output: reports/
+  shap_summary: reports/shap_summary.png
+  shap_bar: reports/shap_bar.png
+  shap_importance: reports/shap_feature_importance.csv

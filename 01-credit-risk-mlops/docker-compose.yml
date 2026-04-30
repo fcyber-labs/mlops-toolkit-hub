@@ -1,0 +1,133 @@
+x-common-env: &common-env
+  MLFLOW_TRACKING_URI: http://mlflow:5000
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUNBUFFERED: "1"
+  OMP_NUM_THREADS: "1"
+  KMP_DUPLICATE_LIB_OK: "TRUE"
+  DAGSHUB_TOKEN: ${DAGSHUB_TOKEN:-}
+
+  AWS_ACCESS_KEY_ID: ${DAGSHUB_TOKEN:-}
+  AWS_SECRET_ACCESS_KEY: ${DAGSHUB_TOKEN:-}
+
+services:
+  mlflow:
+    image: fcyber/credit-risk-mlops:latest
+    pull_policy: always 
+    container_name: mlops-mlflow
+    command: >
+      mlflow server
+        --host 0.0.0.0
+        --port 5000
+        --backend-store-uri sqlite:///mlruns/mlflow.db
+        --default-artifact-root /app/mlruns
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlruns:/app/mlruns
+      - logs:/app/logs
+    environment:
+      <<: *common-env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  pipeline:
+    image: fcyber/credit-risk-mlops:latest
+    pull_policy: always 
+    container_name: mlops-pipeline
+    command: >
+      bash -c "
+        echo '=== Pulling raw data from DagsHub ===' &&
+        dvc pull data/raw/german_credit_data_risk.csv.dvc --no-run-cache &&
+        dvc pull data/raw/lendingclub.dvc --no-run-cache &&
+
+        echo '=== Phase 1: German Credit ===' &&
+        cp params_german.yaml params.yaml &&
+        dvc repro preprocess train evaluate explain &&
+
+        echo '=== Phase 2: LendingClub ===' &&
+        ./run_full_lending_pipeline.sh &&
+
+        echo '=== Training complete. ==='
+      "
+    volumes:
+      - data_raw:/app/data/raw    # removed :ro so dvc pull can write here
+      - models:/app/models
+      - mlruns:/app/mlruns
+      - processed:/app/data/processed
+      - streaming:/app/data/streaming
+      - reports:/app/reports
+      - logs:/app/logs
+    environment:
+      <<: *common-env
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    image: fcyber/credit-risk-mlops:latest
+    pull_policy: always 
+    container_name: mlops-api
+    command: >
+      bash -c "
+        dvc pull data/raw/german_credit_data_risk.csv.dvc --no-run-cache 2>/dev/null || true &&
+        uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --workers 2 --log-level info
+      "
+    volumes:
+      - data_raw:/app/data/raw    # removed :ro
+      - models:/app/models:ro
+      - mlruns:/app/mlruns:ro
+      - processed:/app/data/processed:ro
+    environment:
+      <<: *common-env
+    depends_on:
+      mlflow:
+        condition: service_healthy
+      pipeline:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  dashboard:
+    image: fcyber/credit-risk-mlops:latest
+    pull_policy: always 
+    container_name: mlops-dashboard
+    command: >
+      streamlit run src/monitoring/dashboard.py
+        --server.port 8501
+        --server.address 0.0.0.0
+        --server.headless true
+        --server.fileWatcherType none
+    ports:
+      - "8501:8501"
+    volumes:
+      - reports:/app/reports:ro
+      - models:/app/models:ro
+    environment:
+      <<: *common-env
+      API_URL: http://api:8000
+    depends_on:
+      pipeline:
+        condition: service_completed_successfully
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  data_raw:
+  mlruns:
+  models:
+  processed:
+  streaming:
+  reports:
+  logs:

@@ -1,0 +1,30 @@
+# params.yaml
+# LendingClub Configuration
+
+# params.yaml
+# LendingClub Configuration
+
+dataset: lendingclub
+
+preprocess:
+  input: data/raw/lendingclub/accepted_2007_to_2018Q4.csv
+  output: data/processed/features_lending.csv
+  random_state: 42
+
+train:
+  data: data/processed/features_lending.csv
+  model: models/model_lending.pkl
+  random_state: 42
+  n_trials: 15                          
+
+evaluate:
+  metrics: reports/metrics_full.json    
+  dashboard: reports/results_dashboard.png   
+  threshold: reports/threshold.json     
+
+explain:
+  output: reports/
+  shap_analysis: reports/shap_analysis.png          
+  shap_summary: reports/shap_summary.png          
+  shap_bar: reports/shap_bar.png                   
+  shap_importance: reports/shap_feature_importance.csv

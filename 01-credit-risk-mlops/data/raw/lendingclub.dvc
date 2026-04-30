@@ -1,0 +1,6 @@
+outs:
+- md5: 455e03894a1a129171fb4797fbe0efe6.dir
+  size: 3457421578
+  nfiles: 3
+  hash: md5
+  path: lendingclub

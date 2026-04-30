@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.Python
+
+# Virtual environments
+venv/
+env/
+.env
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# MLflow
+mlruns/
+mlflow.db
+*.db
+
+# DVC internals only - NOT the pointer files themselves
+.dvc/cache
+.dvc/tmp
+.dvc/lock
+.dvc/config.local
+
+# Data content (tracked by DVC)
+data/raw/*.csv
+data/raw/lendingclub/
+data/processed/
+data/streaming/
+
+# Models
+models/*.pkl
+models/*.txt
+
+# Reports
+reports/*.png
+reports/*.json
+
+# Large files
+*.zip
+*.tar
+*.gz
+*.dmg
