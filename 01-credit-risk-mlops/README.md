@@ -59,6 +59,16 @@
 
 This project is built around a **data-agnostic, modular pipeline** — plug in any tabular dataset and the system adapts. Rather than building isolated models, the emphasis is on **reproducibility, business impact, and continuous deployment** — the hallmarks of real MLOps engineering.
 
+
+
+## ✅ CI/CD Pipeline - Credit Risk MLOps
+
+| Status | Link |
+|--------|------|
+| ![Lint](https://github.com/fcyber-labs/mlops-toolkit-hub/actions/workflows/01-cicd.yml/badge.svg) | CI/CD Pipeline |
+
+---
+
 ### 🎯 Design Philosophy
 
 | Principle | Implementation |
@@ -614,11 +624,6 @@ Every pipeline run automatically logs:
 | Fairness & bias analysis | 📋 Planned | 4 |
 | Feature store integration | 📋 Planned | 4 |
 
----
-
-| Status | Link |
-|--------|------|
-| ![Lint](https://github.com/fcyber-labs/mlops-toolkit-hub/actions/workflows/01-cicd.yml/badge.svg) | CI/CD Pipeline |
 
 ---
 ## 📄 License
