@@ -216,7 +216,7 @@ Synthetic Streaming Generator
           │
           ▼
   ┌───────────────┐      PSI < 0.10  →  ✅ STABLE — continue
-  │ Drift Detection│
+  │Drift Detection│
   │  (PSI & KS)   │      PSI 0.10-0.25 → ⚠️ WARNING — monitor closely
   └───────┬───────┘
           │              PSI > 0.25  →  🔴 RETRAIN — trigger pipeline
