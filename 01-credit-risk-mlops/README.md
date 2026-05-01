@@ -14,22 +14,34 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![DVC](https://img.shields.io/badge/DVC-Data%20Versioning-13ADC7?style=for-the-badge&logo=dvc&logoColor=white)](https://dvc.org)
 [![MLflow](https://img.shields.io/badge/MLflow-Experiment%20Tracking-FF6F20?style=for-the-badge&logo=mlflow&logoColor=white)](https://mlflow.org)
-[![DagsHub](https://img.shields.io/badge/DagsHub-Live%20Dashboard-8B5CF6?style=for-the-badge)](https://dagshub.com/fcyber/german-credit-mlops)
-[![License: MIT](https://img.shields.io/badge/License-MIT-22C55E?style=for-the-badge)](LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
+[![CI Pipeline](https://github.com/fcyber-labs/mlops-toolkit-hub/actions/workflows/01-ci-pipeline.yml/badge.svg)](https://github.com/fcyber-labs/mlops-toolkit-hub/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-22C55E?style=for-the-badge&logo=mit&logoColor=white)](LICENSE)
+
 
 <br/>
 
-[![LightGBM](https://img.shields.io/badge/LightGBM-Model-blue?style=flat-square)](https://lightgbm.readthedocs.io)
-[![XGBoost](https://img.shields.io/badge/XGBoost-Model-orange?style=flat-square)](https://xgboost.readthedocs.io)
-[![Optuna](https://img.shields.io/badge/Optuna-HPO-green?style=flat-square)](https://optuna.org)
-[![SHAP](https://img.shields.io/badge/SHAP-Explainability-red?style=flat-square)](https://shap.readthedocs.io)
-[![FastAPI](https://img.shields.io/badge/FastAPI-Serving-teal?style=flat-square)](https://fastapi.tiangolo.com)
-[![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-pink?style=flat-square)](https://streamlit.io)
+![LightGBM](https://img.shields.io/badge/LightGBM-3.3.5-blue?style=flat-square) &nbsp;
+![XGBoost](https://img.shields.io/badge/XGBoost-2.1.0-orange?style=flat-square) &nbsp;
+![Scikit-learn](https://img.shields.io/badge/Scikit--learn-1.4.2-red?style=flat-square) &nbsp;
+![Optuna](https://img.shields.io/badge/Optuna-3.6.0-green?style=flat-square) &nbsp;
+![Imbalanced-learn](https://img.shields.io/badge/Imbalanced--learn-0.12.0-yellow?style=flat-square) &nbsp;
+![SHAP](https://img.shields.io/badge/SHAP-0.44.1-purple?style=flat-square) &nbsp;
+![Matplotlib](https://img.shields.io/badge/Matplotlib-3.8.4-blue?style=flat-square) &nbsp;
+![Seaborn](https://img.shields.io/badge/Seaborn-0.13.2-teal?style=flat-square) &nbsp;
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115.0-teal?style=flat-square) &nbsp;
+![Streamlit](https://img.shields.io/badge/Streamlit-1.35.0-pink?style=flat-square) &nbsp;
+![Uvicorn](https://img.shields.io/badge/Uvicorn-0.30.0-blue?style=flat-square) &nbsp;
+![PSI](https://img.shields.io/badge/PSI-Drift_Detection-8B5CF6?style=flat-square) &nbsp;
+![KS](https://img.shields.io/badge/KS-Test-FF6F20?style=flat-square)
+
 
 <br/>
 
-
-<p align="center"> <a href="https://dagshub.com/fcyber/german-credit-mlops.mlflow/"> <img src="https://img.shields.io/badge/MLflow-Experiment_Tracking-0194E2?style=flat-square&logo=mlflow&logoColor=white" alt="MLflow"> </a> <a href="https://github.com/fcyber/german-credit-mlops"> <img src="https://img.shields.io/badge/GitHub-Code-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub"> </a> <a href="https://dagshub.com/fcyber/german-credit-mlops"> <img src="https://img.shields.io/badge/DagsHub-Data-28A745?style=flat-square&logo=dagshub&logoColor=white" alt="DagsHub"> </a> <a href="https://hub.docker.com/r/fcyber/credit-risk-mlops"> <img src="https://img.shields.io/badge/Docker-Image-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker"> </a> </p>
+[![MLflow](https://img.shields.io/badge/MLflow-Experiment_Tracking-0194E2?style=flat-square&logo=mlflow&logoColor=white)](https://dagshub.com/fcyber/german-credit-mlops.mlflow/)
+[![DagsHub](https://img.shields.io/badge/DagsHub-Data_Storage-28A745?style=flat-square&logo=dagshub&logoColor=white)](https://dagshub.com/fcyber/german-credit-mlops)
+[![GitHub](https://img.shields.io/badge/GitHub-Source_Code-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/fcyber-labs/mlops-toolkit-hub)
+[![Docker Hub](https://img.shields.io/badge/Docker_Hub-Container_Registry-2496ED?style=flat-square&logo=docker&logoColor=white)](https://hub.docker.com/r/fcyber/credit-risk-mlops)
 
 </div>
 
@@ -87,54 +99,10 @@ This project is built around a **data-agnostic, modular pipeline** — plug in a
 <img src="assets/01-mlops.png" alt="Credit Risk MLOps Pipeline Architecture" width="100%"/>
 
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                     CREDIT RISK MLOps PIPELINE                              │
-│              Baseline → Production → Streaming                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-  Data Source                Processing               Serving & Monitoring
-  ──────────                 ──────────               ────────────────────
-
-  German Credit    ──┐
-  (1K rows)          │      ┌──────────────┐          ┌──────────────────┐
-                     ├─────▶│    Data      │──────────▶│   Model          │
-  LendingClub      ──┤      │  Validation  │          │   Registry       │
-  (2.2M rows)        │      └──────┬───────┘          └────────┬─────────┘
-                     │             │                            │
-  Streaming Data   ──┘      ┌──────▼───────┐          ┌────────▼─────────┐
-  (Synthetic)               │   Feature    │          │   FastAPI        │
-                            │ Engineering  │          │   Serving        │
-                            └──────┬───────┘          └────────┬─────────┘
-                                   │                            │
-                            ┌──────▼───────┐          ┌────────▼─────────┐
-                            │    Model     │          │   Monitoring     │
-                            │  Training   │          │   Dashboard      │
-                            │ (Optuna HPO)│          │   (Streamlit)    │
-                            └──────┬───────┘          └────────┬─────────┘
-                                   │                            │
-                            ┌──────▼───────┐          ┌────────▼─────────┐
-                            │   MLflow     │◀─────────▶│  Drift Detection │
-                            │  Tracking    │          │  Auto-Retrain    │
-                            └──────────────┘          └──────────────────┘
-                                   │
-                            ┌──────▼───────┐
-                            │   DagsHub    │
-                            │  (DVC+MLflow)│
-                            └──────────────┘
-```
 
 ### Continuous Improvement Loop
 
-```
-  ┌──────────┐     ┌──────────┐     ┌──────────┐
-  │ Phase 1  │────▶│ Phase 2  │────▶│ Phase 3  │
-  │ Baseline │     │Production│     │Streaming │
-  └──────────┘     └──────────┘     └────┬─────┘
-       ▲                                  │
-       └──────── Auto-Retrain Loop ───────┘
-                  (PSI > 0.25 triggers)
-```
+
 
 ---
 
@@ -395,8 +363,8 @@ Synthetic Streaming Generator
 ## 📊 Performance Summary
 
 ```
-╔═════════════════════════════════════════════════════════════════╗
-║                    PERFORMANCE DASHBOARD                        ║
+╔════════════════════════════════════════════════════════════════╗
+║                    PERFORMANCE DASHBOARD                       ║
 ╠══════════════════╦══════════════╦══════════════╦═══════════════╣
 ║ Metric           ║   Phase 1    ║   Phase 2    ║   Delta       ║
 ╠══════════════════╬══════════════╬══════════════╬═══════════════╣
@@ -619,10 +587,8 @@ Every pipeline run automatically logs:
 | Streamlit monitoring dashboard | ✅ Complete | 3 |
 | FastAPI prediction endpoint | ✅ Complete | 3 |
 | Docker containerization | ✅ Complete | 4 |
-| CI/CD with GitHub Actions | 📋 Planned | 4 |
-| Cloud deployment (AWS/GCP) | 📋 Planned | 4 |
-| Fairness & bias analysis | 📋 Planned | 4 |
-| Feature store integration | 📋 Planned | 4 |
+| CI/CD with GitHub Actions | ✅ Complete | 4 |
+
 
 
 ---
@@ -632,13 +598,12 @@ This project is licensed under the **MIT License** — free for commercial and p
 
 ---
 
-## 🤝 Connect
 
 <div align="center">
 
-**Built as a complete MLOps portfolio piece for 2026**
+**Built as a complete MLOps**
 
-[![GitHub](https://img.shields.io/badge/GitHub-fcyber%2Fgerman--credit--mlops-24292E?style=for-the-badge&logo=github)](https://github.com/fcyber/german-credit-mlops)
+[![GitHub](https://img.shields.io/badge/GitHub-fcyber%2Fmlops-toolkit-hub-24292E?style=for-the-badge&logo=github)](h[ttps://github.com/fcyber/german-credit-mlops](https://github.com/fcyber-labs/mlops-toolkit-hub/tree/main/01-credit-risk-mlops))
 [![MLflow Dashboard](https://img.shields.io/badge/MLflow-Live%20Dashboard-FF6F20?style=for-the-badge&logo=mlflow&logoColor=white)](https://dagshub.com/fcyber/german-credit-mlops.mlflow/)
 [![DagsHub](https://img.shields.io/badge/DagsHub-Experiments-8B5CF6?style=for-the-badge)](https://dagshub.com/fcyber/german-credit-mlops)
 
