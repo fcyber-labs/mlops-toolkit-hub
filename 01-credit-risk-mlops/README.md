@@ -33,7 +33,7 @@
 ![Streamlit](https://img.shields.io/badge/Streamlit-📱-pink) 
 ![Uvicorn](https://img.shields.io/badge/Uvicorn-🦄-blue) 
 ![PSI](https://img.shields.io/badge/PSI-📈-purple) 
-![KS](https://img.shields.io/badge/KS-Test-📊-orange)
+![KS-Test](https://img.shields.io/badge/KS--Test-Statistic-8B5CF6)
 
 <br/>
 
@@ -72,11 +72,11 @@ This project is built around a **data-agnostic, modular pipeline** — plug in a
 
 
 
-## ✅ CI/CD Pipeline - Credit Risk MLOps
+## ✅ CI Pipeline - Credit Risk MLOps
 
 | Status | Link |
 |--------|------|
-| ![Lint](https://github.com/fcyber-labs/mlops-toolkit-hub/actions/workflows/01-cicd.yml/badge.svg) | CI/CD Pipeline |
+| ![Lint](https://github.com/fcyber-labs/mlops-toolkit-hub/actions/workflows/01-cicd.yml/badge.svg) | CI Pipeline |
 
 ---
 
