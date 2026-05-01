@@ -15,7 +15,7 @@
 [![DVC](https://img.shields.io/badge/DVC-Data%20Versioning-13ADC7?style=for-the-badge&logo=dvc&logoColor=white)](https://dvc.org)
 [![MLflow](https://img.shields.io/badge/MLflow-Experiment%20Tracking-FF6F20?style=for-the-badge&logo=mlflow&logoColor=white)](https://mlflow.org)
 [![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
-[![CI Pipeline](https://github.com/fcyber-labs/mlops-toolkit-hub/actions/workflows/01-cicd.yml/badge.svg)](https://github.com/fcyber-labs/mlops-toolkit-hub/actions)
+[![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-Continuous_Integration-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/fcyber-labs/mlops-toolkit-hub/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22C55E?style=for-the-badge&logo=mit&logoColor=white)](LICENSE)
 
 
