@@ -4,7 +4,6 @@ Lending Club Credit Risk — LightGBM Training Pipeline
 
 """
 
-
 import os
 import sys
 import json
@@ -38,6 +37,7 @@ import optuna
 from optuna.samplers import TPESampler
 import lightgbm as lgb
 from lightgbm import LGBMClassifier
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.logging_config import logger
 
@@ -146,7 +146,9 @@ def find_threshold(
     if mask.any():
         best_t = float(thresholds[mask][np.argmin(costs[mask])])
     else:
-        logger.warning("No threshold met Prec≥0.65 & Recall≥0.60 — using unconstrained minimum cost")
+        logger.warning(
+            "No threshold met Prec≥0.65 & Recall≥0.60 — using unconstrained minimum cost"
+        )
         best_t = float(thresholds[np.argmin(costs)])
 
     sweep = {
@@ -183,10 +185,14 @@ def train(model_path: str) -> dict:
     logger.info(f"scale_pos_weight   : {pos_weight:.2f}")
 
     #  Subsample for Optuna
-    idx = np.random.RandomState(RANDOM_STATE).choice(len(X_train), size=int(len(X_train) * OPTUNA_FRAC), replace=False)
+    idx = np.random.RandomState(RANDOM_STATE).choice(
+        len(X_train), size=int(len(X_train) * OPTUNA_FRAC), replace=False
+    )
     X_opt = X_train.iloc[idx]
     y_opt = y_train.iloc[idx]
-    logger.info(f"Optuna subsample   : {len(X_opt):,} rows  ({OPTUNA_FRAC:.0%} of train)")
+    logger.info(
+        f"Optuna subsample   : {len(X_opt):,} rows  ({OPTUNA_FRAC:.0%} of train)"
+    )
 
     #  Optuna hyperparameter search
     logger.info(f"Running Optuna ({N_TRIALS} trials) …")
@@ -304,7 +310,9 @@ def train(model_path: str) -> dict:
 
     #  Feature importance plot
     fi = (
-        pd.DataFrame({"feature": X_train.columns, "importance": final_model.feature_importances_})
+        pd.DataFrame(
+            {"feature": X_train.columns, "importance": final_model.feature_importances_}
+        )
         .sort_values("importance", ascending=False)
         .head(20)
     )

@@ -1,5 +1,5 @@
 ---
-name: CI/CD Pipeline - Full MLOps
+name: 01 CI/CD Pipeline - Credit Risk MLOps 
 
 "on":
   push:
@@ -18,10 +18,11 @@ jobs:
   
   # JOB 1: Lint & Format Check
   
+
   lint:
-    name: Lint & Format Check
+    name: Ruff Lint & Format
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
 
     steps:
       - uses: actions/checkout@v4
@@ -29,28 +30,19 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: '3.10'
 
-      - name: Install linting tools
+      - name: Install Ruff
         run: |
-          pip install flake8 black isort mypy
+          pip install ruff
 
-      - name: Run isort (import sorting)
+      - name: Run Ruff linter
         run: |
-          isort --check-only --diff src/ src_phase_1/ tests/
+          ruff check . --output-format=github
 
-      - name: Run Black (code formatting)
+      - name: Run Ruff formatter check
         run: |
-          black --check --diff src/ src_phase_1/ tests/
-
-      - name: Run Flake8 (style guide)
-        run: |
-          flake8 src/ src_phase_1/ tests/ --max-line-length=120 --ignore=E203,W503,E501
-
-      - name: Run mypy (type checking - optional)
-        run: |
-          mypy src/ --ignore-missing-imports || true
-
+          ruff format --check .
   
   # JOB 2: Unit Tests (Phase 1, 2, 3)
   

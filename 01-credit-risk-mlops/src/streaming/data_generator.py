@@ -42,16 +42,37 @@ class LoanDataGenerator:
         housing_str = np.random.choice(self.housing_options, p=self.housing_probs)
 
         loan = {
-            "age": float(max(18, min(80, np.random.normal(self.age_dist[0], self.age_dist[1])))),
+            "age": float(
+                max(18, min(80, np.random.normal(self.age_dist[0], self.age_dist[1])))
+            ),
             "credit_amount": float(
                 max(
                     1000,
-                    min(50000, np.random.normal(self.credit_amount_dist[0] * drift_factor, self.credit_amount_dist[1])),
+                    min(
+                        50000,
+                        np.random.normal(
+                            self.credit_amount_dist[0] * drift_factor,
+                            self.credit_amount_dist[1],
+                        ),
+                    ),
                 )
             ),
-            "duration": float(np.random.choice(list(self.duration_probs.keys()), p=list(self.duration_probs.values()))),
+            "duration": float(
+                np.random.choice(
+                    list(self.duration_probs.keys()),
+                    p=list(self.duration_probs.values()),
+                )
+            ),
             "purpose": np.random.choice(self.purpose_options, p=self.purpose_probs),
-            "income": float(max(20000, min(300000, np.random.normal(self.income_dist[0], self.income_dist[1])))),
+            "income": float(
+                max(
+                    20000,
+                    min(
+                        300000,
+                        np.random.normal(self.income_dist[0], self.income_dist[1]),
+                    ),
+                )
+            ),
             "emp_length": float(min(40, max(0, np.random.exponential(8)))),
             "housing": float(self.housing_map[housing_str]),
             "dti": float(min(50, max(0, np.random.gamma(2, 5)))),

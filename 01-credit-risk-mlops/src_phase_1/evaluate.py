@@ -1,4 +1,3 @@
-
 import os
 import sys
 import json
@@ -26,8 +25,10 @@ from sklearn.metrics import (
     precision_recall_curve,
 )
 import yaml
+
 sys.path.append(".")
 from config.logging_config import logger
+
 warnings.filterwarnings("ignore")
 
 
@@ -75,7 +76,9 @@ if os.path.exists(model_path):
             blend_weights = np.array(pipeline_config["blend_weights"])
             final_threshold = pipeline_config["threshold"]
             logger.info(f"Loaded pipeline config: {model_names}")
-            logger.info(f"Blend weights: {dict(zip(model_names, blend_weights.round(3)))}")
+            logger.info(
+                f"Blend weights: {dict(zip(model_names, blend_weights.round(3)))}"
+            )
             logger.info(f"Decision threshold: {final_threshold:.3f}")
 
             # Load individual models
@@ -90,7 +93,9 @@ if os.path.exists(model_path):
                     sys.exit(1)
 
             # Ensemble probabilities
-            proba_matrix = np.column_stack([models[n].predict_proba(X_test)[:, 1] for n in model_names])
+            proba_matrix = np.column_stack(
+                [models[n].predict_proba(X_test)[:, 1] for n in model_names]
+            )
             y_pred_proba = proba_matrix @ blend_weights
             y_pred = (y_pred_proba >= final_threshold).astype(int)
         else:
@@ -184,7 +189,13 @@ logger.success("ROC curve saved: reports/roc_curve.png")
 pr_p, pr_r, _ = precision_recall_curve(y_test, y_pred_proba)
 plt.figure(figsize=(8, 6))
 plt.plot(pr_r, pr_p, lw=2, label=f"AP={metrics['avg_precision']:.3f}")
-plt.axvline(x=metrics["recall"], color="red", ls=":", alpha=0.7, label=f"Op. point (t={final_threshold:.3f})")
+plt.axvline(
+    x=metrics["recall"],
+    color="red",
+    ls=":",
+    alpha=0.7,
+    label=f"Op. point (t={final_threshold:.3f})",
+)
 plt.xlabel("Recall")
 plt.ylabel("Precision")
 plt.title("Precision-Recall Curve — v3", fontsize=14, fontweight="bold")
@@ -201,10 +212,14 @@ if os.path.exists("data/processed/main_run_id.txt"):
         main_run_id = f.read().strip()
 
 try:
-    run_kwargs = dict(run_id=main_run_id) if main_run_id else dict(run_name="evaluation_v3")
+    run_kwargs = (
+        dict(run_id=main_run_id) if main_run_id else dict(run_name="evaluation_v3")
+    )
 
     with mlflow.start_run(**run_kwargs, nested=False):
-        mlflow.log_metrics({f"eval_{k}": v for k, v in metrics.items() if isinstance(v, float)})
+        mlflow.log_metrics(
+            {f"eval_{k}": v for k, v in metrics.items() if isinstance(v, float)}
+        )
         for art in [
             "reports/metrics.json",
             "reports/roc_curve.png",

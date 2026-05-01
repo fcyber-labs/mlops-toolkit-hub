@@ -40,12 +40,23 @@ class GermanCreditDataGenerator:
         drift_factor = 1 + (day / 1000) * 0.1
 
         loan = {
-            "Age": max(18, min(80, np.random.normal(self.age_dist[0], self.age_dist[1]))),
+            "Age": max(
+                18, min(80, np.random.normal(self.age_dist[0], self.age_dist[1]))
+            ),
             "Credit amount": max(
                 1000,
-                min(20000, np.random.normal(self.credit_amount_dist[0] * drift_factor, self.credit_amount_dist[1])),
+                min(
+                    20000,
+                    np.random.normal(
+                        self.credit_amount_dist[0] * drift_factor,
+                        self.credit_amount_dist[1],
+                    ),
+                ),
             ),
-            "Duration": max(6, min(72, np.random.normal(self.duration_dist[0], self.duration_dist[1]))),
+            "Duration": max(
+                6,
+                min(72, np.random.normal(self.duration_dist[0], self.duration_dist[1])),
+            ),
             "Job": np.random.choice(self.job_options, p=self.job_probs),
             "Purpose": np.random.choice(self.purpose_options, p=self.purpose_probs),
             "Housing": np.random.choice(self.housing_options, p=self.housing_probs),
@@ -59,7 +70,9 @@ class GermanCreditDataGenerator:
         loans = [self.generate_loan(start_day + i) for i in range(n_loans)]
         return pd.DataFrame(loans)
 
-    def generate_stream(self, days=30, loans_per_day=50, output_dir="data/streaming/german"):
+    def generate_stream(
+        self, days=30, loans_per_day=50, output_dir="data/streaming/german"
+    ):
         """Generate streaming data over multiple days"""
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 

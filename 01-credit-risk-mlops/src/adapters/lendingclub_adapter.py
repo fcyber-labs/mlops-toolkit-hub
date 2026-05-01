@@ -8,7 +8,8 @@ warnings.filterwarnings("ignore")
 
 
 def adapt_lendingclub(
-    accepted_path="data/raw/lendingclub/accepted_2007_to_2018Q4.csv", output_path="data/raw/pipeline_input.csv"
+    accepted_path="data/raw/lendingclub/accepted_2007_to_2018Q4.csv",
+    output_path="data/raw/pipeline_input.csv",
 ):
     """
     Convert LendingClub accepted loans to pipeline format
@@ -29,7 +30,13 @@ def adapt_lendingclub(
 
     # Map loan_status to binary risk: 1 = Bad ; 0 = Good
 
-    bad_statuses = ["Charged Off", "Default", "Late (31-120 days)", "Late (16-30 days)", "In Grace Period"]
+    bad_statuses = [
+        "Charged Off",
+        "Default",
+        "Late (31-120 days)",
+        "Late (16-30 days)",
+        "In Grace Period",
+    ]
     good_statuses = ["Fully Paid", "Current"]
 
     # Filter to known statuses
@@ -74,7 +81,13 @@ def adapt_lendingclub(
     df["emp_length"] = df["emp_length"].apply(emp_to_num)
 
     # Housing
-    housing_map = {"RENT": "rent", "MORTGAGE": "mortgage", "OWN": "own", "ANY": "other", "NONE": "other"}
+    housing_map = {
+        "RENT": "rent",
+        "MORTGAGE": "mortgage",
+        "OWN": "own",
+        "ANY": "other",
+        "NONE": "other",
+    }
     df["housing"] = df["home_ownership"].map(housing_map).fillna("other")
 
     # Purpose

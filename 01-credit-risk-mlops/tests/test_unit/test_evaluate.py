@@ -3,7 +3,9 @@ import numpy as np
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 
 def test_evaluate_module_imports():
@@ -29,7 +31,18 @@ def test_compute_metrics_returns_dict():
 
     metrics = compute_metrics(y_true, y_proba, threshold)
 
-    expected_keys = ["recall", "precision", "f1", "f2", "roc_auc", "business_cost", "tn", "fp", "fn", "tp"]
+    expected_keys = [
+        "recall",
+        "precision",
+        "f1",
+        "f2",
+        "roc_auc",
+        "business_cost",
+        "tn",
+        "fp",
+        "fn",
+        "tp",
+    ]
     for key in expected_keys:
         assert key in metrics
 

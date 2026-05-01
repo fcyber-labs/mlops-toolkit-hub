@@ -5,7 +5,6 @@ Lending Club Credit Risk — Preprocessing Pipeline
 
 """
 
-
 import os
 import gc
 import json
@@ -18,30 +17,50 @@ import yaml
 from sklearn.preprocessing import LabelEncoder, PowerTransformer
 from sklearn.feature_selection import SelectKBest, mutual_info_classif
 from sklearn.model_selection import train_test_split
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.logging_config import logger
+
 warnings.filterwarnings("ignore")
 
 
 #  Constants
 RANDOM_STATE = 42
-CHUNK_SIZE   = 500_000
+CHUNK_SIZE = 500_000
 
 # Origination-time columns only — no post-origination leakage
 FEATURE_COLS = [
-    "loan_amnt", "term", "int_rate", "installment", "grade", "sub_grade",
-    "emp_length", "home_ownership", "annual_inc", "verification_status",
-    "dti", "fico_range_low", "fico_range_high",
-    "delinq_2yrs", "inq_last_6mths", "open_acc", "pub_rec",
-    "revol_bal", "revol_util", "total_acc", "mort_acc",
-    "purpose", "initial_list_status", "application_type",
+    "loan_amnt",
+    "term",
+    "int_rate",
+    "installment",
+    "grade",
+    "sub_grade",
+    "emp_length",
+    "home_ownership",
+    "annual_inc",
+    "verification_status",
+    "dti",
+    "fico_range_low",
+    "fico_range_high",
+    "delinq_2yrs",
+    "inq_last_6mths",
+    "open_acc",
+    "pub_rec",
+    "revol_bal",
+    "revol_util",
+    "total_acc",
+    "mort_acc",
+    "purpose",
+    "initial_list_status",
+    "application_type",
     "earliest_cr_line",
     "addr_state",
 ]
 
 
-
 # Feature engineering
+
 
 def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, dict]:  # noqa: C901
     """
@@ -105,13 +124,18 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
     if "mort_acc" in df.columns and "total_acc" in df.columns:
         fill_map = df.groupby("total_acc")["mort_acc"].median()
         df["mort_acc"] = df.apply(
-            lambda r: fill_map.get(r["total_acc"], 0)
-            if pd.isna(r["mort_acc"]) else r["mort_acc"],
+            lambda r: (
+                fill_map.get(r["total_acc"], 0)
+                if pd.isna(r["mort_acc"])
+                else r["mort_acc"]
+            ),
             axis=1,
         )
 
     #  7. Categorical label encoding
-    cat_cols = [c for c in df.select_dtypes(include="object").columns if c != target_col]
+    cat_cols = [
+        c for c in df.select_dtypes(include="object").columns if c != target_col
+    ]
     le_dict: dict[str, LabelEncoder] = {}
     for col in cat_cols:
         le = LabelEncoder()
@@ -163,8 +187,8 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
 
     #  12. Log transforms (reduce skew)
     for raw, log in [
-        ("loan_amnt",   "log_loan_amnt"),
-        ("annual_inc",  "log_annual_inc"),
+        ("loan_amnt", "log_loan_amnt"),
+        ("annual_inc", "log_annual_inc"),
         ("installment", "log_installment"),
     ]:
         if raw in df.columns:
@@ -175,15 +199,25 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
 
     #  13. FICO risk tiers
     if "fico_score" in df.columns:
-        df["fico_tier"] = pd.cut(
-            df["fico_score"],
-            bins=[300, 580, 620, 660, 700, 740, 780, 850],
-            labels=[0, 1, 2, 3, 4, 5, 6],
-            ordered=True,
-        ).astype(float).fillna(2)
+        df["fico_tier"] = (
+            pd.cut(
+                df["fico_score"],
+                bins=[300, 580, 620, 660, 700, 740, 780, 850],
+                labels=[0, 1, 2, 3, 4, 5, 6],
+                ordered=True,
+            )
+            .astype(float)
+            .fillna(2)
+        )
 
     #  14. Composite risk score
-    required_risk = ["sub_grade_enc", "dti", "loan_income_ratio", "derogatory_score", "fico_score"]
+    required_risk = [
+        "sub_grade_enc",
+        "dti",
+        "loan_income_ratio",
+        "derogatory_score",
+        "fico_score",
+    ]
     if all(c in df.columns for c in required_risk):
         df["composite_risk"] = (
             df["sub_grade_enc"] / 35 * 0.30
@@ -195,9 +229,14 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
 
     #  15. Outlier clipping
     clip_rules = {
-        "dti": (0, 50), "annual_inc": (0, 300_000), "revol_bal": (0, 300_000),
-        "revol_util": (0, 120), "open_acc": (0, 40), "total_acc": (0, 80),
-        "loan_amnt": (0, 40_000), "int_rate": (0, 32),
+        "dti": (0, 50),
+        "annual_inc": (0, 300_000),
+        "revol_bal": (0, 300_000),
+        "revol_util": (0, 120),
+        "open_acc": (0, 40),
+        "total_acc": (0, 80),
+        "loan_amnt": (0, 40_000),
+        "int_rate": (0, 32),
     }
     for col, (lo, hi) in clip_rules.items():
         if col in df.columns:
@@ -216,8 +255,8 @@ def _clean_col_names(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-
 # Main pipeline
+
 
 def preprocess(input_path: str, output_path: str) -> None:
     logger.info("=" * 70)
@@ -242,7 +281,9 @@ def preprocess(input_path: str, output_path: str) -> None:
         chunk = chunk[available + ["target"]]
         chunks.append(chunk)
         total_rows += len(chunk)
-        logger.info(f"  Chunk {i+1}: {len(chunk):,} rows  (cumulative {total_rows:,})")
+        logger.info(
+            f"  Chunk {i + 1}: {len(chunk):,} rows  (cumulative {total_rows:,})"
+        )
 
     df = pd.concat(chunks, ignore_index=True)
     del chunks
@@ -309,24 +350,26 @@ def preprocess(input_path: str, output_path: str) -> None:
     X_val.to_csv("data/processed/X_val.csv", index=False)
     y_val.to_csv("data/processed/y_val.csv", index=False)
     X_test.to_csv("data/processed/X_test.csv", index=False)
-    pd.DataFrame(y_test.values, columns=["risk"]).to_csv("data/processed/y_test.csv", index=False)
+    pd.DataFrame(y_test.values, columns=["risk"]).to_csv(
+        "data/processed/y_test.csv", index=False
+    )
 
     #  Save artefacts
-    joblib.dump(selector,          "data/processed/feature_selector.pkl")
+    joblib.dump(selector, "data/processed/feature_selector.pkl")
     joblib.dump(selected_features, "data/processed/selected_features.pkl")
-    joblib.dump(le_dict,           "data/processed/label_encoders.pkl")
+    joblib.dump(le_dict, "data/processed/label_encoders.pkl")
 
     meta = {
-        "n_raw_rows":         int(df.shape[0]),
-        "n_features_final":   len(selected_features),
-        "selected_features":  selected_features,
-        "scale_pos_weight":   pos_weight,
-        "train_shape":        list(X_train.shape),
-        "val_shape":          list(X_val.shape),
-        "test_shape":         list(X_test.shape),
+        "n_raw_rows": int(df.shape[0]),
+        "n_features_final": len(selected_features),
+        "selected_features": selected_features,
+        "scale_pos_weight": pos_weight,
+        "train_shape": list(X_train.shape),
+        "val_shape": list(X_val.shape),
+        "test_shape": list(X_test.shape),
         "default_rate_train": float(y_train.mean()),
-        "default_rate_val":   float(y_val.mean()),
-        "default_rate_test":  float(y_test.mean()),
+        "default_rate_val": float(y_val.mean()),
+        "default_rate_test": float(y_test.mean()),
     }
     with open("data/processed/feature_metadata.json", "w") as f:
         json.dump(meta, f, indent=2)
@@ -341,19 +384,18 @@ def preprocess(input_path: str, output_path: str) -> None:
     logger.info("Preprocessing complete ✓")
 
 
-
 # Entry point
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Lending Club preprocessing pipeline")
-    parser.add_argument("--input",  default=None, help="Path to raw CSV")
+    parser.add_argument("--input", default=None, help="Path to raw CSV")
     parser.add_argument("--output", default=None, help="Path for processed output CSV")
     args = parser.parse_args()
 
     with open("params.yaml") as f:
         params = yaml.safe_load(f)
 
-    input_path  = args.input  or params["preprocess"]["input"]
+    input_path = args.input or params["preprocess"]["input"]
     output_path = args.output or params["preprocess"]["output"]
 
     preprocess(input_path, output_path)

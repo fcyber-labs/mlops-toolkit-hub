@@ -15,6 +15,7 @@ import shap
 import mlflow
 import mlflow.sklearn
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
@@ -42,8 +43,8 @@ os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("MLFLOW_TRACKING_PASSWORD", "
 mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", ""))
 
 
-
 # Main
+
 
 def explain(model_path: str, sample_size: int = 2000) -> None:  # noqa: C901
     logger.info("=" * 70)
@@ -78,12 +79,14 @@ def explain(model_path: str, sample_size: int = 2000) -> None:  # noqa: C901
             main_run_id = f.read().strip()
         logger.info(f"Found main run ID: {main_run_id}")
     else:
-        logger.warning("No main run ID found. SHAP artifacts will be logged to separate run.")
+        logger.warning(
+            "No main run ID found. SHAP artifacts will be logged to separate run."
+        )
 
     #  SHAP values
     logger.info("Computing SHAP values (this may take ~1 min for 2 k rows) …")
     try:
-        explainer   = shap.TreeExplainer(booster)
+        explainer = shap.TreeExplainer(booster)
         shap_values = explainer.shap_values(X_sample)
 
         # Binary classification: shap_values is a list
@@ -147,9 +150,7 @@ def explain(model_path: str, sample_size: int = 2000) -> None:  # noqa: C901
     #  4. Feature importance CSV
     mean_abs_shap = np.abs(shap_values).mean(axis=0)
     fi = (
-        pd.DataFrame(
-            {"feature": X_sample.columns, "shap_importance": mean_abs_shap}
-        )
+        pd.DataFrame({"feature": X_sample.columns, "shap_importance": mean_abs_shap})
         .sort_values("shap_importance", ascending=False)
         .reset_index(drop=True)
     )
@@ -158,7 +159,7 @@ def explain(model_path: str, sample_size: int = 2000) -> None:  # noqa: C901
 
     logger.info("Top 10 features by SHAP importance:")
     for i, row in fi.head(10).iterrows():
-        logger.info(f"  {i+1:2d}. {row['feature']:<30} {row['shap_importance']:.4f}")
+        logger.info(f"  {i + 1:2d}. {row['feature']:<30} {row['shap_importance']:.4f}")
 
     #  5. Dependence plots for top-3 features
     for feat in fi.head(3)["feature"].tolist():
@@ -170,10 +171,13 @@ def explain(model_path: str, sample_size: int = 2000) -> None:  # noqa: C901
             plt.title(f"SHAP Dependence — {feat}", fontsize=12, fontweight="bold")
             plt.tight_layout()
             safe_name = feat.replace("/", "_")
-            plt.savefig(f"reports/shap_dependence_{safe_name}.png", dpi=150,
-                        bbox_inches="tight")
+            plt.savefig(
+                f"reports/shap_dependence_{safe_name}.png", dpi=150, bbox_inches="tight"
+            )
             plt.close()
-            logger.info(f"Dependence plot saved   : reports/shap_dependence_{safe_name}.png")
+            logger.info(
+                f"Dependence plot saved   : reports/shap_dependence_{safe_name}.png"
+            )
         except Exception as e:
             logger.warning(f"Dependence plot for {feat} failed: {e}")
 
@@ -197,9 +201,15 @@ def explain(model_path: str, sample_size: int = 2000) -> None:  # noqa: C901
                     if os.path.exists(artefact):
                         mlflow.log_artifact(artefact)
 
-                mlflow.log_metric("top_feature_shap", float(fi.iloc[0]["shap_importance"]))
-                mlflow.log_metric("second_feature_shap", float(fi.iloc[1]["shap_importance"]))
-                mlflow.log_metric("third_feature_shap", float(fi.iloc[2]["shap_importance"]))
+                mlflow.log_metric(
+                    "top_feature_shap", float(fi.iloc[0]["shap_importance"])
+                )
+                mlflow.log_metric(
+                    "second_feature_shap", float(fi.iloc[1]["shap_importance"])
+                )
+                mlflow.log_metric(
+                    "third_feature_shap", float(fi.iloc[2]["shap_importance"])
+                )
                 mlflow.log_param("top_feature", fi.iloc[0]["feature"])
                 mlflow.log_param("shap_sample_size", n)
                 mlflow.log_param("n_features", X_sample.shape[1])
@@ -218,9 +228,15 @@ def explain(model_path: str, sample_size: int = 2000) -> None:  # noqa: C901
                     if os.path.exists(artefact):
                         mlflow.log_artifact(artefact)
 
-                mlflow.log_metric("top_feature_shap", float(fi.iloc[0]["shap_importance"]))
-                mlflow.log_metric("second_feature_shap", float(fi.iloc[1]["shap_importance"]))
-                mlflow.log_metric("third_feature_shap", float(fi.iloc[2]["shap_importance"]))
+                mlflow.log_metric(
+                    "top_feature_shap", float(fi.iloc[0]["shap_importance"])
+                )
+                mlflow.log_metric(
+                    "second_feature_shap", float(fi.iloc[1]["shap_importance"])
+                )
+                mlflow.log_metric(
+                    "third_feature_shap", float(fi.iloc[2]["shap_importance"])
+                )
                 mlflow.log_param("top_feature", fi.iloc[0]["feature"])
                 mlflow.log_param("shap_sample_size", n)
                 mlflow.log_param("n_features", X_sample.shape[1])
@@ -234,9 +250,10 @@ def explain(model_path: str, sample_size: int = 2000) -> None:  # noqa: C901
     logger.info("=" * 70)
     logger.info(f"Samples analysed : {n:,}")
     logger.info(f"Features         : {X_sample.shape[1]}")
-    logger.info(f"Top feature      : {fi.iloc[0]['feature']}  ({fi.iloc[0]['shap_importance']:.4f})")
+    logger.info(
+        f"Top feature      : {fi.iloc[0]['feature']}  ({fi.iloc[0]['shap_importance']:.4f})"
+    )
     logger.info("Explainability complete ✓")
-
 
 
 # Entry point
@@ -244,8 +261,12 @@ def explain(model_path: str, sample_size: int = 2000) -> None:  # noqa: C901
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="SHAP explainability pipeline")
     parser.add_argument("--model", default="models/model_lending.pkl")
-    parser.add_argument("--n",     type=int, default=2000,
-                        help="Number of test samples to use for SHAP (default 2000)")
+    parser.add_argument(
+        "--n",
+        type=int,
+        default=2000,
+        help="Number of test samples to use for SHAP (default 2000)",
+    )
     args = parser.parse_args()
 
     explain(args.model, args.n)

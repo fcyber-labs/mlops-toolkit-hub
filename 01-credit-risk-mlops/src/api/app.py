@@ -34,7 +34,9 @@ mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", ""))
 
 # Initialize FastAPI
 app = FastAPI(
-    title="Credit Risk Prediction API", description="Predict loan default risk using Machine Learning", version="1.0.0"
+    title="Credit Risk Prediction API",
+    description="Predict loan default risk using Machine Learning",
+    version="1.0.0",
 )
 
 # Initialize model registry
@@ -112,7 +114,11 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "model_loaded": model is not None, "timestamp": datetime.now().isoformat()}
+    return {
+        "status": "healthy",
+        "model_loaded": model is not None,
+        "timestamp": datetime.now().isoformat(),
+    }
 
 
 @app.post("/predict", response_model=PredictionResponse)
@@ -138,7 +144,9 @@ async def predict(loan: LoanApplication):
     # Log to MLflow (async, don't block response)
     mlflow.set_experiment("phase_3_drifting")
     try:
-        with mlflow.start_run(run_name=f"api_prediction_{datetime.now().strftime('%Y%m%d_%H%M%S')}"):
+        with mlflow.start_run(
+            run_name=f"api_prediction_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        ):
             mlflow.log_param("model_version", str(model_version))
             mlflow.log_metric("prediction", int(prediction))
             mlflow.log_metric("probability_default", float(probability[1]))
@@ -191,7 +199,9 @@ async def predict_batch(request: BatchPredictionRequest):
     # Log batch prediction to MLflow
     mlflow.set_experiment("phase_3_drifting")
     try:
-        with mlflow.start_run(run_name=f"api_batch_{datetime.now().strftime('%Y%m%d_%H%M%S')}"):
+        with mlflow.start_run(
+            run_name=f"api_batch_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        ):
             mlflow.log_param("model_version", str(model_version))
             mlflow.log_param("batch_size", len(request.loans))
             mlflow.log_metric("latency_ms", latency_ms)

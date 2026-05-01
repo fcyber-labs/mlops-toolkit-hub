@@ -34,11 +34,18 @@ class DriftDetector:
         if self.reference_data is None:
             raise ValueError("Reference data not set")
 
-        ref_values = pd.to_numeric(self.reference_data[col_name], errors="coerce").dropna()
+        ref_values = pd.to_numeric(
+            self.reference_data[col_name], errors="coerce"
+        ).dropna()
         current_values = pd.to_numeric(current_values, errors="coerce").dropna()
 
         if len(ref_values) < 2 or len(current_values) < 2:
-            return {"feature": col_name, "type": "numerical", "drift_detected": False, "p_value": 1.0}
+            return {
+                "feature": col_name,
+                "type": "numerical",
+                "drift_detected": False,
+                "p_value": 1.0,
+            }
 
         try:
             statistic, p_value = ks_2samp(ref_values, current_values)
@@ -96,7 +103,9 @@ class DriftDetector:
         exclude_cols = ["day", "timestamp", "risk", "target", "Unnamed: 0"]
         common_cols = [col for col in common_cols if col not in exclude_cols]
 
-        print(f"Common columns for drift detection: {common_cols[:5]}... (total: {len(common_cols)})")
+        print(
+            f"Common columns for drift detection: {common_cols[:5]}... (total: {len(common_cols)})"
+        )
 
         for col in common_cols:
             if self.reference_data[col].dtype in ["float64", "int64"]:
@@ -127,12 +136,16 @@ class DriftDetector:
             return
 
         print("\n" + "=" * 60)
-        print(f"DRIFT DETECTION REPORT - {self.drift_report.get('model_name', 'Unknown').upper()}")
+        print(
+            f"DRIFT DETECTION REPORT - {self.drift_report.get('model_name', 'Unknown').upper()}"
+        )
         print("=" * 60)
         print(f"Total features analyzed: {self.drift_report['total_features']}")
         print(f"Features with drift: {self.drift_report['features_with_drift']}")
         print(f"Overall drift score: {self.drift_report['overall_drift_score']:.2%}")
-        print(f"DRIFT ALERT: {'⚠️ YES' if self.drift_report['drift_alert'] else '✅ NO'}")
+        print(
+            f"DRIFT ALERT: {'⚠️ YES' if self.drift_report['drift_alert'] else '✅ NO'}"
+        )
 
     def save_report(self, output_path="reports/drift_report.json"):
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
@@ -175,7 +188,9 @@ def detect_drift_for_both_models():
         print(f"Reference columns: {list(ref_data_german.columns)[:5]}...")
 
         # Find common columns
-        common_cols = list(set(ref_data_german.columns) & set(current_data_german.columns))
+        common_cols = list(
+            set(ref_data_german.columns) & set(current_data_german.columns)
+        )
         print(f"Common columns: {len(common_cols)}")
 
         if len(common_cols) > 0:
@@ -189,13 +204,21 @@ def detect_drift_for_both_models():
 
             # Log to MLflow
             mlflow.set_experiment("phase_3_drifting")
-            with mlflow.start_run(run_name=f"drift_phase1_{datetime.now().strftime('%Y%m%d_%H%M%S')}"):
+            with mlflow.start_run(
+                run_name=f"drift_phase1_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            ):
                 mlflow.log_param("phase", "phase1")
                 mlflow.log_param("model_name", "german_credit")
                 mlflow.log_metric("total_features", report_german["total_features"])
-                mlflow.log_metric("features_with_drift", report_german["features_with_drift"])
-                mlflow.log_metric("overall_drift_score", report_german["overall_drift_score"])
-                mlflow.log_metric("drift_alert", 1 if report_german["drift_alert"] else 0)
+                mlflow.log_metric(
+                    "features_with_drift", report_german["features_with_drift"]
+                )
+                mlflow.log_metric(
+                    "overall_drift_score", report_german["overall_drift_score"]
+                )
+                mlflow.log_metric(
+                    "drift_alert", 1 if report_german["drift_alert"] else 0
+                )
                 mlflow.log_artifact("reports/drift_report_german.json")
                 mlflow.log_artifact(german_stream_path)
         else:
@@ -229,7 +252,9 @@ def detect_drift_for_both_models():
         print(f"Reference columns: {list(ref_data_lending.columns)[:5]}...")
 
         # Find common columns
-        common_cols = list(set(ref_data_lending.columns) & set(current_data_lending.columns))
+        common_cols = list(
+            set(ref_data_lending.columns) & set(current_data_lending.columns)
+        )
         print(f"Common columns: {len(common_cols)}")
 
         if len(common_cols) > 0:
@@ -243,13 +268,21 @@ def detect_drift_for_both_models():
 
             # Log to MLflow
             mlflow.set_experiment("phase_3_drifting")
-            with mlflow.start_run(run_name=f"drift_phase2_{datetime.now().strftime('%Y%m%d_%H%M%S')}"):
+            with mlflow.start_run(
+                run_name=f"drift_phase2_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            ):
                 mlflow.log_param("phase", "phase2")
                 mlflow.log_param("model_name", "lendingclub")
                 mlflow.log_metric("total_features", report_lending["total_features"])
-                mlflow.log_metric("features_with_drift", report_lending["features_with_drift"])
-                mlflow.log_metric("overall_drift_score", report_lending["overall_drift_score"])
-                mlflow.log_metric("drift_alert", 1 if report_lending["drift_alert"] else 0)
+                mlflow.log_metric(
+                    "features_with_drift", report_lending["features_with_drift"]
+                )
+                mlflow.log_metric(
+                    "overall_drift_score", report_lending["overall_drift_score"]
+                )
+                mlflow.log_metric(
+                    "drift_alert", 1 if report_lending["drift_alert"] else 0
+                )
                 mlflow.log_artifact("reports/drift_report.json")
                 mlflow.log_artifact(lending_stream_path)
 
@@ -257,7 +290,9 @@ def detect_drift_for_both_models():
                 for result in report_lending["results"]:
                     if result["drift_detected"]:
                         mlflow.log_metric(f"drift_{result['feature']}", 1)
-                        mlflow.log_metric(f"p_value_{result['feature']}", result["p_value"])
+                        mlflow.log_metric(
+                            f"p_value_{result['feature']}", result["p_value"]
+                        )
         else:
             print("⚠️ No common columns found for drift detection")
     else:

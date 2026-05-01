@@ -50,7 +50,9 @@ if os.path.exists(selected_features_path):
         logger.error(f"X_test missing {len(missing)} expected features: {missing[:5]}")
         sys.exit(1)
     X_test = X_test[selected_features]
-    logger.info(f"Feature alignment applied: {X_test.shape[1]} features (from selected_features.pkl)")
+    logger.info(
+        f"Feature alignment applied: {X_test.shape[1]} features (from selected_features.pkl)"
+    )
 else:
     logger.warning("selected_features.pkl not found — using X_test.csv columns as-is")
 
@@ -83,7 +85,9 @@ if not os.path.exists(shap_model_pkl):
     sys.exit(1)
 
 loaded = joblib.load(shap_model_pkl)
-logger.info(f"Loaded {shap_model_name} from {shap_model_pkl} (type: {type(loaded).__name__})")
+logger.info(
+    f"Loaded {shap_model_name} from {shap_model_pkl} (type: {type(loaded).__name__})"
+)
 
 #  Extract raw LightGBM Booster for SHAP
 
@@ -124,7 +128,9 @@ try:
     raw = explainer.shap_values(X_test_sample)
 
     if isinstance(raw, list):
-        logger.info(f"Binary classifier detected – using class-1 SHAP values (list length {len(raw)})")
+        logger.info(
+            f"Binary classifier detected – using class-1 SHAP values (list length {len(raw)})"
+        )
         shap_values = raw[1]
     else:
         shap_values = raw
