@@ -616,6 +616,11 @@ Every pipeline run automatically logs:
 
 ---
 
+| Status | Link |
+|--------|------|
+| ![Lint](https://github.com/fcyber-labs/mlops-toolkit-hub/actions/workflows/01-cicd.yml/badge.svg) | CI/CD Pipeline |
+
+---
 ## 📄 License
 
 This project is licensed under the **MIT License** — free for commercial and personal use. See [LICENSE](LICENSE) for details.

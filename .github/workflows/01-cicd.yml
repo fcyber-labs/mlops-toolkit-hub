@@ -1,11 +1,13 @@
 ---
 name: 01 CI/CD Pipeline - Credit Risk MLOps 
 
+run-name: "01 CI/CD Pipeline - Credit Risk MLOps"
+
 "on":
-  push:
-    branches: [main, develop, feature/*]
-  pull_request:
-    branches: [main]
+  # push:
+  #   branches: [main, develop, feature/*]
+  # pull_request:
+  #   branches: [main]
   workflow_dispatch: 
 
 
