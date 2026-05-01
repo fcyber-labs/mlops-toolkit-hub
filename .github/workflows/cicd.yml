@@ -8,6 +8,12 @@ name: 01 CI/CD Pipeline - Credit Risk MLOps
     branches: [main]
   workflow_dispatch: 
 
+
+defaults:
+  run:
+    working-directory: ./01-credit-risk-mlops
+
+    
 env:
   PYTHON_VERSION: '3.10'
   MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
