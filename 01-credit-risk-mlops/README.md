@@ -99,8 +99,6 @@ This project is built around a **data-agnostic, modular pipeline** — plug in a
 
 
 
-### Continuous Improvement Loop
-
 
 
 ---
@@ -267,15 +265,15 @@ Synthetic Streaming Generator
 ```
 
 ---
-
 ## 🧪 Technical Stack
 
 <table>
-<tr>
+<thead>
 <th>Category</th>
 <th>Tools</th>
 <th>Purpose</th>
-</tr>
+</thead>
+<tbody>
 <tr>
 <td><b>Core Language</b></td>
 <td>Python 3.10+</td>
@@ -331,8 +329,18 @@ Synthetic Streaming Generator
 <td>Streamlit</td>
 <td>Live dashboard (planned)</td>
 </tr>
+<tr>
+<td><b>Containerization</b></td>
+<td>Docker, Docker Compose</td>
+<td>Reproducible environments, multi-service orchestration</td>
+</tr>
+<tr>
+<td><b>CI/CD Pipeline</b></td>
+<td>GitHub Actions, Ruff, pytest</td>
+<td>Linting, unit tests, integration tests, Docker build, security scan</td>
+</tr>
+</tbody>
 </table>
-
 ---
 
 ## ⚙️ Pipeline Features
