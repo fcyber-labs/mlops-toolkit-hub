@@ -256,13 +256,13 @@ Synthetic Streaming Generator
 ┌──────────────────────────────────────────────────┐
 │           LIVE MONITORING DASHBOARD              │
 │                                                  │
-│  Avg PSI: 0.18  │  Model AUC: 0.701  │  ⚠️ WARN │
+│  Avg PSI: 0.18  │  Model AUC: 0.701  │  ⚠️ WARN  │
 │                                                  │
 │  Feature Drift:                                  │
 │  ████████░░ loan_amnt    PSI: 0.14  ⚠️           │
 │  █████████░ int_rate     PSI: 0.11  ⚠️           │
 │  ████░░░░░░ dti          PSI: 0.08  ✅           │
-│  ██████████ annual_inc   PSI: 0.26  🔴 RETRAIN  │
+│  ██████████ annual_inc   PSI: 0.26  🔴 RETRAIN   │
 └──────────────────────────────────────────────────┘
 ```
 
@@ -389,12 +389,7 @@ Synthetic Streaming Generator
 
 # 🚀 Quick Start
 
-## Prerequisites
-- Docker & Docker Compose installed
-- Git
-- DagsHub account (free tier includes 100GB storage)
 
----
 
 ## 1. Clone Repository
 
@@ -417,6 +412,7 @@ MLFLOW_TRACKING_PASSWORD=your_dagshub_token_here
 MLFLOW_TRACKING_URI=https://dagshub.com/fcyber/german-credit-mlops.mlflow
 EOF
 ```
+
 
 > Get your token: https://dagshub.com/user/settings/tokens
 > *(needs read + write permissions)*
@@ -506,10 +502,9 @@ streamlit run src/monitoring/dashboard.py --server.port 8501
 
 | Variable | Purpose |
 |---|---|
-| `DAGSHUB_TOKEN` | Authentication for DagsHub (data & MLflow) |
 | `MLFLOW_TRACKING_URI` | MLflow server endpoint |
 | `MLFLOW_TRACKING_USERNAME` | DagsHub username |
-| `MLFLOW_TRACKING_PASSWORD` | Same as `DAGSHUB_TOKEN` |
+| `MLFLOW_TRACKING_PASSWORD` | DagsHub key |
 
 ---
 
@@ -521,19 +516,6 @@ Large datasets (200MB+ LendingClub CSV) are stored in DagsHub remote:
 - Data pulled at runtime via DVC
 - Persistent volumes cache data between runs
 
----
-
-## 🛑 Stop Services
-
-```bash
-docker compose down
-```
-
-To also remove volumes (clear all cached data):
-
-```bash
-docker compose down -v
-```
 
 ---
 
