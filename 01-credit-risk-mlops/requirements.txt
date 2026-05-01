@@ -40,10 +40,11 @@ scipy
 lightgbm
 optuna
 imbalanced-learn
+xgboost==2.1.0
 
 # tests
 pytest 
 pytest-cov 
 pytest-timeout
 
-loguru
+loguru==0.7.2 
