@@ -32,7 +32,9 @@ def engineer_lendingclub_features(df):  # noqa: C901
                 return total_acc_avg.get(total_acc, 0)
             return mort_acc
 
-        df["mort_acc"] = df.apply(lambda x: fill_mort_acc(x["total_acc"], x["mort_acc"]), axis=1)
+        df["mort_acc"] = df.apply(
+            lambda x: fill_mort_acc(x["total_acc"], x["mort_acc"]), axis=1
+        )
 
     #  Process categorical variables
     print("  - Processing categorical variables...")
@@ -52,18 +54,24 @@ def engineer_lendingclub_features(df):  # noqa: C901
             df[col] = df[col].apply(process_binary)
 
     if "mort_acc" in df.columns:
-        df["mort_acc"] = df["mort_acc"].apply(lambda x: 0 if x == 0.0 else (1 if x >= 1.0 else x))
+        df["mort_acc"] = df["mort_acc"].apply(
+            lambda x: 0 if x == 0.0 else (1 if x >= 1.0 else x)
+        )
 
     #  Extract zip code
     print("  - Extracting zip codes...")
     if "address" in df.columns:
-        df["zip_code"] = df["address"].apply(lambda x: str(x)[-5:] if pd.notna(x) else "00000")
+        df["zip_code"] = df["address"].apply(
+            lambda x: str(x)[-5:] if pd.notna(x) else "00000"
+        )
 
     #  Extract year from earliest_cr_line
     print("  - Processing credit history...")
     if "earliest_cr_line" in df.columns:
         df["earliest_cr_line"] = pd.to_datetime(df["earliest_cr_line"], errors="coerce")
-        df["credit_history_years"] = (pd.Timestamp.now() - df["earliest_cr_line"]).dt.days / 365
+        df["credit_history_years"] = (
+            pd.Timestamp.now() - df["earliest_cr_line"]
+        ).dt.days / 365
         df["earliest_cr_line"] = df["earliest_cr_line"].dt.year
 
     # Handle outliers

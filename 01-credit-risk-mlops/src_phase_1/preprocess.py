@@ -83,7 +83,9 @@ def _feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
     df["loan_stress"] = df["Credit amount"] / (df["Duration"] ** 0.5 + 1)
 
     #  domain risk scores
-    df["age_risk_score"] = np.where(df["Age"] < 25, 3, np.where(df["Age"] < 30, 2, np.where(df["Age"] < 40, 1, 0.5)))
+    df["age_risk_score"] = np.where(
+        df["Age"] < 25, 3, np.where(df["Age"] < 30, 2, np.where(df["Age"] < 40, 1, 0.5))
+    )
     df["job_risk_score"] = df["Job"].map({0: 0.8, 1: 0.6, 2: 0.3, 3: 0.1})
     df["housing_risk_score"] = df["Housing"].map({"own": 0.1, "rent": 0.6, "free": 0.9})
     df["savings_risk_score"] = df["Saving accounts"].map(
@@ -103,7 +105,9 @@ def _feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
     global_mean = df["Risk"].mean()
     for col in ["Purpose", "Sex"]:
         col_stats = df.groupby(col)["Risk"].agg(["mean", "count"])
-        col_stats["smooth"] = (col_stats["mean"] * col_stats["count"] + global_mean * 10) / (col_stats["count"] + 10)
+        col_stats["smooth"] = (
+            col_stats["mean"] * col_stats["count"] + global_mean * 10
+        ) / (col_stats["count"] + 10)
         df[f"{col}_target_enc"] = df[col].map(col_stats["smooth"])
 
     #  group statistical features
@@ -113,13 +117,17 @@ def _feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
             grp_std = df.groupby(grp_col)[val_col].transform("std").fillna(0)
             df[f"{val_col}_mean_by_{grp_col}"] = grp_mean
             df[f"{val_col}_std_by_{grp_col}"] = grp_std
-            df[f"{val_col}_zscore_in_{grp_col}"] = (df[val_col] - grp_mean) / (grp_std + 1e-6)
+            df[f"{val_col}_zscore_in_{grp_col}"] = (df[val_col] - grp_mean) / (
+                grp_std + 1e-6
+            )
 
     #  outlier flags
     for col in ["Age", "Credit amount", "Duration"]:
         Q1, Q3 = df[col].quantile(0.25), df[col].quantile(0.75)
         IQR = Q3 - Q1
-        df[f"{col}_outlier"] = ((df[col] < Q1 - 1.5 * IQR) | (df[col] > Q3 + 1.5 * IQR)).astype(int)
+        df[f"{col}_outlier"] = (
+            (df[col] < Q1 - 1.5 * IQR) | (df[col] > Q3 + 1.5 * IQR)
+        ).astype(int)
 
     #  clustering features
     _sc = StandardScaler()
@@ -228,7 +236,9 @@ def preprocess(input_path: str, output_path: str):
     logger.info(f"Train imbalance: {y_train_full.mean():.2%}")
 
     #  SHAP / RF feature selection
-    _rf_quick = RandomForestClassifier(n_estimators=100, random_state=RANDOM_STATE, class_weight="balanced", n_jobs=-1)
+    _rf_quick = RandomForestClassifier(
+        n_estimators=100, random_state=RANDOM_STATE, class_weight="balanced", n_jobs=-1
+    )
     _rf_quick.fit(X_train_full, y_train_full)
 
     if SHAP_AVAILABLE:
@@ -238,16 +248,22 @@ def preprocess(input_path: str, output_path: str):
             shap_vals = shap_vals[1]
         elif shap_vals.ndim == 3:
             shap_vals = shap_vals[:, :, 1]
-        _feat_imp = pd.Series(np.abs(shap_vals).mean(axis=0), index=X_train_full.columns)
+        _feat_imp = pd.Series(
+            np.abs(shap_vals).mean(axis=0), index=X_train_full.columns
+        )
         logger.info("Feature importance: SHAP")
     else:
-        _feat_imp = pd.Series(_rf_quick.feature_importances_, index=X_train_full.columns)
+        _feat_imp = pd.Series(
+            _rf_quick.feature_importances_, index=X_train_full.columns
+        )
         logger.info("Feature importance: RF gain (SHAP unavailable)")
 
     selected_features = _feat_imp.sort_values(ascending=False).head(60).index.tolist()
     X_train = X_train_full[selected_features]
     X_test = X_test[selected_features]
-    logger.info(f"Feature selection: {len(X_train_full.columns)} → {len(selected_features)}")
+    logger.info(
+        f"Feature selection: {len(X_train_full.columns)} → {len(selected_features)}"
+    )
     logger.info(f"Top 10: {selected_features[:10]}")
 
     #  BorderlineSMOTE + TomekLinks
@@ -260,7 +276,9 @@ def preprocess(input_path: str, output_path: str):
     X_resampled, y_resampled = bsmote.fit_resample(X_train, y_train_full)
     tomek = TomekLinks(n_jobs=-1)
     X_resampled, y_resampled = tomek.fit_resample(X_resampled, y_resampled)
-    logger.info(f"After resampling: {X_resampled.shape[0]} samples | imbalance: {y_resampled.mean():.2%}")
+    logger.info(
+        f"After resampling: {X_resampled.shape[0]} samples | imbalance: {y_resampled.mean():.2%}"
+    )
 
     #  save artifacts
 
@@ -269,7 +287,9 @@ def preprocess(input_path: str, output_path: str):
 
     # resampled train
     X_resampled.to_csv("data/processed/X_train_resampled.csv", index=False)
-    pd.Series(y_resampled, name="Risk").to_csv("data/processed/y_train_resampled.csv", index=False)
+    pd.Series(y_resampled, name="Risk").to_csv(
+        "data/processed/y_train_resampled.csv", index=False
+    )
 
     # test set
     X_test.to_csv("data/processed/X_test.csv", index=False)

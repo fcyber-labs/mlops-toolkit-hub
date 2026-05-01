@@ -13,14 +13,17 @@ def update_live_metrics():
 
     metrics_path = Path("reports/metrics_lending.json")
 
-
     if metrics_path.exists():
         with open(metrics_path, "r") as f:
             metrics = json.load(f)
 
         # Add small random variation to simulate live data
-        metrics["roc_auc"] = min(0.95, max(0.65, metrics.get("roc_auc", 0.70) + np.random.normal(0, 0.005)))
-        metrics["accuracy"] = min(0.95, max(0.70, metrics.get("accuracy", 0.85) + np.random.normal(0, 0.003)))
+        metrics["roc_auc"] = min(
+            0.95, max(0.65, metrics.get("roc_auc", 0.70) + np.random.normal(0, 0.005))
+        )
+        metrics["accuracy"] = min(
+            0.95, max(0.70, metrics.get("accuracy", 0.85) + np.random.normal(0, 0.003))
+        )
 
         with open(metrics_path, "w") as f:
             json.dump(metrics, f, indent=2)

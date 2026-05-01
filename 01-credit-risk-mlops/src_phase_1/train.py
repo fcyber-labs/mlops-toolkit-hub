@@ -158,7 +158,11 @@ def lgb_objective(trial, X_res, y_res):
             eval_set=[(X_res.iloc[val_idx], y_res.iloc[val_idx])],
             callbacks=[lgb.early_stopping(40, verbose=False), lgb.log_evaluation(-1)],
         )
-        scores.append(composite_score(y_res.iloc[val_idx], clf.predict_proba(X_res.iloc[val_idx])[:, 1]))
+        scores.append(
+            composite_score(
+                y_res.iloc[val_idx], clf.predict_proba(X_res.iloc[val_idx])[:, 1]
+            )
+        )
     return float(np.mean(scores))
 
 
@@ -191,7 +195,11 @@ def xgb_objective(trial, X_res, y_res):
             eval_set=[(X_res.iloc[val_idx], y_res.iloc[val_idx])],
             verbose=False,
         )
-        scores.append(composite_score(y_res.iloc[val_idx], clf.predict_proba(X_res.iloc[val_idx])[:, 1]))
+        scores.append(
+            composite_score(
+                y_res.iloc[val_idx], clf.predict_proba(X_res.iloc[val_idx])[:, 1]
+            )
+        )
     return float(np.mean(scores))
 
 
@@ -279,7 +287,9 @@ def train(model_path: str) -> None:  # noqa: C901
     lgb_recall.fit(X_resampled, y_resampled)
     logger.info("  LightGBM (recall maximizer) ✓")
 
-    xgb_final_params = {k: v for k, v in best_xgb_params.items() if k != "early_stopping_rounds"}
+    xgb_final_params = {
+        k: v for k, v in best_xgb_params.items() if k != "early_stopping_rounds"
+    }
     xgb_opt = XGBClassifier(**xgb_final_params)
     xgb_opt.fit(X_resampled, y_resampled)
     logger.info("  XGBoost ✓")
@@ -347,13 +357,21 @@ def train(model_path: str) -> None:  # noqa: C901
                 valid.append((t, rec))
     final_threshold = max(valid, key=lambda x: x[1])[0] if valid else optimal_threshold
 
-    logger.info(f"Business-optimal threshold : {optimal_threshold:.3f}  cost={min(costs):.0f}")
-    logger.info(f"Recall-optimal threshold   : {final_threshold:.3f}  (precision≥{MIN_PRECISION})")
+    logger.info(
+        f"Business-optimal threshold : {optimal_threshold:.3f}  cost={min(costs):.0f}"
+    )
+    logger.info(
+        f"Recall-optimal threshold   : {final_threshold:.3f}  (precision≥{MIN_PRECISION})"
+    )
 
     #  evaluation
     results_default = evaluate_at_threshold(0.50, y_test, y_pred_proba_ensemble)
-    results_cost_opt = evaluate_at_threshold(optimal_threshold, y_test, y_pred_proba_ensemble)
-    results_recall = evaluate_at_threshold(final_threshold, y_test, y_pred_proba_ensemble)
+    results_cost_opt = evaluate_at_threshold(
+        optimal_threshold, y_test, y_pred_proba_ensemble
+    )
+    results_recall = evaluate_at_threshold(
+        final_threshold, y_test, y_pred_proba_ensemble
+    )
     final_metrics = results_recall
 
     logger.info("*" * 70)
@@ -419,7 +437,9 @@ def train(model_path: str) -> None:  # noqa: C901
     plt.figure(figsize=(10, 7))
     plt.barh(fi["feature"][:20], fi["importance"][:20])
     plt.xlabel("Feature Importance (gain)")
-    plt.title("Top 20 Feature Importances — LightGBM v3", fontsize=14, fontweight="bold")
+    plt.title(
+        "Top 20 Feature Importances — LightGBM v3", fontsize=14, fontweight="bold"
+    )
     plt.gca().invert_yaxis()
     plt.tight_layout()
     plt.savefig("reports/feature_importance.png", dpi=150, bbox_inches="tight")
@@ -454,14 +474,22 @@ def train(model_path: str) -> None:  # noqa: C901
         "training_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "ensemble_type": "soft_voting_weighted",
         "base_models": model_names,
-        "blend_weights": {n: round(float(w), 4) for n, w in zip(model_names, best_weights)},
+        "blend_weights": {
+            n: round(float(w), 4) for n, w in zip(model_names, best_weights)
+        },
         "final_threshold": float(final_threshold),
         "optimal_threshold": float(optimal_threshold),
         "cost_matrix": COST_MATRIX,
-        "final_metrics": {k: round(v, 4) for k, v in final_metrics.items() if isinstance(v, float)},
-        "default_metrics": {k: round(v, 4) for k, v in results_default.items() if isinstance(v, float)},
+        "final_metrics": {
+            k: round(v, 4) for k, v in final_metrics.items() if isinstance(v, float)
+        },
+        "default_metrics": {
+            k: round(v, 4) for k, v in results_default.items() if isinstance(v, float)
+        },
         "lgb_best_params": best_lgb_params,
-        "xgb_best_params": {k: v for k, v in best_xgb_params.items() if k != "early_stopping_rounds"},
+        "xgb_best_params": {
+            k: v for k, v in best_xgb_params.items() if k != "early_stopping_rounds"
+        },
         "n_optuna_trials": N_OPTUNA_TRIALS,
         "cv_folds": CV_FOLDS,
     }
@@ -503,7 +531,11 @@ def train(model_path: str) -> None:  # noqa: C901
         for name, w in zip(model_names, best_weights):
             mlflow.log_param(f"blend_weight_{name}", round(float(w), 4))
         mlflow.log_params(
-            {f"lgb_{k}": v for k, v in best_lgb_params.items() if k not in ["random_state", "verbosity", "n_jobs"]}
+            {
+                f"lgb_{k}": v
+                for k, v in best_lgb_params.items()
+                if k not in ["random_state", "verbosity", "n_jobs"]
+            }
         )
         mlflow.log_params(
             {
@@ -529,7 +561,9 @@ def train(model_path: str) -> None:  # noqa: C901
                 "precision": round(results_recall.get("precision", 0), 4),
                 "f1": round(results_recall.get("f1", 0), 4),
                 "f2": round(results_recall.get("f2", 0), 4),
-                "balanced_accuracy": round(results_recall.get("balanced_accuracy", 0), 4),
+                "balanced_accuracy": round(
+                    results_recall.get("balanced_accuracy", 0), 4
+                ),
                 "business_cost": round(results_recall.get("business_cost", 0), 2),
                 "threshold": round(final_threshold, 4),
                 "n_features": X_test.shape[1],
@@ -544,11 +578,21 @@ def train(model_path: str) -> None:  # noqa: C901
             ("cost_opt", results_cost_opt),
             ("default", results_default),
         ]:
-            mlflow.log_metrics({f"{prefix}_{k}": round(v, 4) for k, v in res.items() if isinstance(v, float)})
+            mlflow.log_metrics(
+                {
+                    f"{prefix}_{k}": round(v, 4)
+                    for k, v in res.items()
+                    if isinstance(v, float)
+                }
+            )
 
         # text artifacts
-        cm = confusion_matrix(y_test, (y_pred_proba_ensemble >= final_threshold).astype(int))
-        cm_df = pd.DataFrame(cm, columns=["Pred Good", "Pred Bad"], index=["Act Good", "Act Bad"])
+        cm = confusion_matrix(
+            y_test, (y_pred_proba_ensemble >= final_threshold).astype(int)
+        )
+        cm_df = pd.DataFrame(
+            cm, columns=["Pred Good", "Pred Bad"], index=["Act Good", "Act Bad"]
+        )
         mlflow.log_text(str(cm_df), "confusion_matrix.txt")
         cr = classification_report(
             y_test,

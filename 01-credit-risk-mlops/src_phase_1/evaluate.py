@@ -76,7 +76,9 @@ if os.path.exists(model_path):
             blend_weights = np.array(pipeline_config["blend_weights"])
             final_threshold = pipeline_config["threshold"]
             logger.info(f"Loaded pipeline config: {model_names}")
-            logger.info(f"Blend weights: {dict(zip(model_names, blend_weights.round(3)))}")
+            logger.info(
+                f"Blend weights: {dict(zip(model_names, blend_weights.round(3)))}"
+            )
             logger.info(f"Decision threshold: {final_threshold:.3f}")
 
             # Load individual models
@@ -91,7 +93,9 @@ if os.path.exists(model_path):
                     sys.exit(1)
 
             # Ensemble probabilities
-            proba_matrix = np.column_stack([models[n].predict_proba(X_test)[:, 1] for n in model_names])
+            proba_matrix = np.column_stack(
+                [models[n].predict_proba(X_test)[:, 1] for n in model_names]
+            )
             y_pred_proba = proba_matrix @ blend_weights
             y_pred = (y_pred_proba >= final_threshold).astype(int)
         else:
@@ -208,10 +212,14 @@ if os.path.exists("data/processed/main_run_id.txt"):
         main_run_id = f.read().strip()
 
 try:
-    run_kwargs = dict(run_id=main_run_id) if main_run_id else dict(run_name="evaluation_v3")
+    run_kwargs = (
+        dict(run_id=main_run_id) if main_run_id else dict(run_name="evaluation_v3")
+    )
 
     with mlflow.start_run(**run_kwargs, nested=False):
-        mlflow.log_metrics({f"eval_{k}": v for k, v in metrics.items() if isinstance(v, float)})
+        mlflow.log_metrics(
+            {f"eval_{k}": v for k, v in metrics.items() if isinstance(v, float)}
+        )
         for art in [
             "reports/metrics.json",
             "reports/roc_curve.png",

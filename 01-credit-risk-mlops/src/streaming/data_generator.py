@@ -42,7 +42,9 @@ class LoanDataGenerator:
         housing_str = np.random.choice(self.housing_options, p=self.housing_probs)
 
         loan = {
-            "age": float(max(18, min(80, np.random.normal(self.age_dist[0], self.age_dist[1])))),
+            "age": float(
+                max(18, min(80, np.random.normal(self.age_dist[0], self.age_dist[1])))
+            ),
             "credit_amount": float(
                 max(
                     1000,

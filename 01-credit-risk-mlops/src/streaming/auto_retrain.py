@@ -87,11 +87,15 @@ class AutoRetrainer:
 
         # Log retraining event
         mlflow.set_experiment("phase_3_drifting")
-        with mlflow.start_run(run_name=f"auto_retrain_{datetime.now().strftime('%Y%m%d_%H%M%S')}"):
+        with mlflow.start_run(
+            run_name=f"auto_retrain_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        ):
             mlflow.log_param("retrain_reason", "data_drift")
             mlflow.log_param("timestamp", datetime.now().isoformat())
             mlflow.log_param("drift_threshold", self.drift_threshold)
-            mlflow.log_metric("drift_score", self.detector.drift_report.get("overall_drift_score", 0))
+            mlflow.log_metric(
+                "drift_score", self.detector.drift_report.get("overall_drift_score", 0)
+            )
             mlflow.log_metric(
                 "features_with_drift",
                 self.detector.drift_report.get("features_with_drift", 0),
@@ -104,7 +108,9 @@ class AutoRetrainer:
                 mlflow.log_artifact("/tmp/drift_report_retrain.json")
 
         # Run training pipeline
-        result = subprocess.run(["python", "src/train.py"], capture_output=True, text=True)
+        result = subprocess.run(
+            ["python", "src/train.py"], capture_output=True, text=True
+        )
 
         if result.returncode == 0:
             print("✅ Auto-retraining completed successfully!")
@@ -112,10 +118,14 @@ class AutoRetrainer:
 
             # Log retraining success to MLflow
             mlflow.set_experiment("phase_3_drifting")
-            with mlflow.start_run(run_name=f"retrain_success_{datetime.now().strftime('%Y%m%d_%H%M%S')}"):
+            with mlflow.start_run(
+                run_name=f"retrain_success_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            ):
                 mlflow.log_param("status", "success")
                 mlflow.log_param("model_path", str(self.model_path))
-                mlflow.log_metric("retraining_duration_seconds", 0)  # Could calculate actual duration
+                mlflow.log_metric(
+                    "retraining_duration_seconds", 0
+                )  # Could calculate actual duration
         else:
             print("❌ Auto-retraining failed!")
             print(result.stderr)
@@ -123,7 +133,9 @@ class AutoRetrainer:
 
             # Log retraining failure to MLflow
             mlflow.set_experiment("phase_3_drifting")
-            with mlflow.start_run(run_name=f"retrain_failure_{datetime.now().strftime('%Y%m%d_%H%M%S')}"):
+            with mlflow.start_run(
+                run_name=f"retrain_failure_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            ):
                 mlflow.log_param("status", "failed")
                 mlflow.log_param("error", result.stderr[:500])  # Log first 500 chars
                 mlflow.log_artifact("/tmp/retrain_error.log")
