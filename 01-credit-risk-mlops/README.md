@@ -15,26 +15,25 @@
 [![DVC](https://img.shields.io/badge/DVC-Data%20Versioning-13ADC7?style=for-the-badge&logo=dvc&logoColor=white)](https://dvc.org)
 [![MLflow](https://img.shields.io/badge/MLflow-Experiment%20Tracking-FF6F20?style=for-the-badge&logo=mlflow&logoColor=white)](https://mlflow.org)
 [![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
-[![CI Pipeline](https://github.com/fcyber-labs/mlops-toolkit-hub/actions/workflows/01-ci-pipeline.yml/badge.svg)](https://github.com/fcyber-labs/mlops-toolkit-hub/actions)
+[![CI Pipeline](https://github.com/fcyber-labs/mlops-toolkit-hub/actions/workflows/01-cicd.yml/badge.svg)](https://github.com/fcyber-labs/mlops-toolkit-hub/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22C55E?style=for-the-badge&logo=mit&logoColor=white)](LICENSE)
 
 
 <br/>
 
-![LightGBM](https://img.shields.io/badge/LightGBM-3.3.5-blue?style=flat-square) &nbsp;
-![XGBoost](https://img.shields.io/badge/XGBoost-2.1.0-orange?style=flat-square) &nbsp;
-![Scikit-learn](https://img.shields.io/badge/Scikit--learn-1.4.2-red?style=flat-square) &nbsp;
-![Optuna](https://img.shields.io/badge/Optuna-3.6.0-green?style=flat-square) &nbsp;
-![Imbalanced-learn](https://img.shields.io/badge/Imbalanced--learn-0.12.0-yellow?style=flat-square) &nbsp;
-![SHAP](https://img.shields.io/badge/SHAP-0.44.1-purple?style=flat-square) &nbsp;
-![Matplotlib](https://img.shields.io/badge/Matplotlib-3.8.4-blue?style=flat-square) &nbsp;
-![Seaborn](https://img.shields.io/badge/Seaborn-0.13.2-teal?style=flat-square) &nbsp;
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115.0-teal?style=flat-square) &nbsp;
-![Streamlit](https://img.shields.io/badge/Streamlit-1.35.0-pink?style=flat-square) &nbsp;
-![Uvicorn](https://img.shields.io/badge/Uvicorn-0.30.0-blue?style=flat-square) &nbsp;
-![PSI](https://img.shields.io/badge/PSI-Drift_Detection-8B5CF6?style=flat-square) &nbsp;
-![KS](https://img.shields.io/badge/KS-Test-FF6F20?style=flat-square)
-
+![LightGBM](https://img.shields.io/badge/LightGBM-⚡-blue) 
+![XGBoost](https://img.shields.io/badge/XGBoost-🚀-orange) 
+![Scikit-learn](https://img.shields.io/badge/Scikit--learn-🧠-red) 
+![Optuna](https://img.shields.io/badge/Optuna-🎯-green) 
+![Imbalanced-learn](https://img.shields.io/badge/Imbalanced--learn-⚖️-yellow) 
+![SHAP](https://img.shields.io/badge/SHAP-🔮-purple) 
+![Matplotlib](https://img.shields.io/badge/Matplotlib-📊-blue) 
+![Seaborn](https://img.shields.io/badge/Seaborn-🎨-teal) 
+![FastAPI](https://img.shields.io/badge/FastAPI-⚡-teal) 
+![Streamlit](https://img.shields.io/badge/Streamlit-📱-pink) 
+![Uvicorn](https://img.shields.io/badge/Uvicorn-🦄-blue) 
+![PSI](https://img.shields.io/badge/PSI-📈-purple) 
+![KS](https://img.shields.io/badge/KS-Test-📊-orange)
 
 <br/>
 
@@ -603,7 +602,7 @@ This project is licensed under the **MIT License** — free for commercial and p
 
 **Built as a complete MLOps**
 
-[![GitHub](https://img.shields.io/badge/GitHub-fcyber%2Fmlops-toolkit-hub-24292E?style=for-the-badge&logo=github)](h[ttps://github.com/fcyber/german-credit-mlops](https://github.com/fcyber-labs/mlops-toolkit-hub/tree/main/01-credit-risk-mlops))
+[![GitHub](https://img.shields.io/badge/GitHub-fcyber%2Fmlops--toolkit--hub-24292E?style=for-the-badge&logo=github)](https://github.com/fcyber-labs/mlops-toolkit-hub/tree/main/01-credit-risk-mlops)
 [![MLflow Dashboard](https://img.shields.io/badge/MLflow-Live%20Dashboard-FF6F20?style=for-the-badge&logo=mlflow&logoColor=white)](https://dagshub.com/fcyber/german-credit-mlops.mlflow/)
 [![DagsHub](https://img.shields.io/badge/DagsHub-Experiments-8B5CF6?style=for-the-badge)](https://dagshub.com/fcyber/german-credit-mlops)
 
