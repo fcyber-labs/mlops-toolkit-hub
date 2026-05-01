@@ -60,17 +60,13 @@ def test_drift_detector_categorical_alternative():
     from src.streaming.drift_detector import DriftDetector
 
     # Create reference data
-    ref_data = pd.DataFrame(
-        {"cat1": ["A"] * 50 + ["B"] * 50, "cat2": ["X"] * 60 + ["Y"] * 40}
-    )
+    ref_data = pd.DataFrame({"cat1": ["A"] * 50 + ["B"] * 50, "cat2": ["X"] * 60 + ["Y"] * 40})
 
     detector = DriftDetector(threshold=0.05)
     detector.set_reference(ref_data)
 
     # Current data with different distribution
-    current_diff = pd.DataFrame(
-        {"cat1": ["C"] * 60 + ["D"] * 40, "cat2": ["Z"] * 70 + ["W"] * 30}
-    )
+    current_diff = pd.DataFrame({"cat1": ["C"] * 60 + ["D"] * 40, "cat2": ["Z"] * 70 + ["W"] * 30})
 
     results = detector.detect_all_drift(current_diff)
     assert isinstance(results, dict)

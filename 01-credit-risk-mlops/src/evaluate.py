@@ -87,10 +87,7 @@ def compute_metrics(
     lift_at_20 = float(y_true[sorted_idx[: 2 * decile_size]].mean() / base_rate)
 
     # Lift per decile
-    lift_by_decile = [
-        float(y_true[sorted_idx[: d * decile_size]].mean() / base_rate)
-        for d in range(1, 11)
-    ]
+    lift_by_decile = [float(y_true[sorted_idx[: d * decile_size]].mean() / base_rate) for d in range(1, 11)]
 
     #  Business cost
     business_cost = int(fp * cost_fp + fn * cost_fn)
@@ -248,9 +245,7 @@ def plot_dashboard(
     #  2. Precision-Recall Curve
     ax2 = fig.add_subplot(gs[0, 1])
     pr_prec, pr_rec, _ = precision_recall_curve(y_true, y_proba)
-    ax2.plot(
-        pr_rec, pr_prec, lw=2.5, color="#16A34A", label=f"AP={m['avg_precision']:.3f}"
-    )
+    ax2.plot(pr_rec, pr_prec, lw=2.5, color="#16A34A", label=f"AP={m['avg_precision']:.3f}")
     ax2.axvline(
         m["recall"],
         color="red",
@@ -332,9 +327,7 @@ def plot_dashboard(
         label="Default (1)",
         density=True,
     )
-    ax6.axvline(
-        threshold, color="black", ls="--", lw=2, label=f"Threshold={threshold:.3f}"
-    )
+    ax6.axvline(threshold, color="black", ls="--", lw=2, label=f"Threshold={threshold:.3f}")
     ax6.set(
         xlabel="Predicted Probability",
         ylabel="Density",
@@ -346,9 +339,7 @@ def plot_dashboard(
     #  7. Business Cost Curve
     ax7 = fig.add_subplot(gs[2, 0])
     ax7.plot(thresholds, costs / 1e6, color="#EA580C", lw=2.5)
-    ax7.axvline(
-        threshold, color="black", ls="--", lw=1.5, label=f"Optimal t={threshold:.3f}"
-    )
+    ax7.axvline(threshold, color="black", ls="--", lw=1.5, label=f"Optimal t={threshold:.3f}")
     ax7.set(xlabel="Threshold", ylabel="Cost ($M)", title="Business Cost vs Threshold")
     ax7.legend(fontsize=9)
     ax7.grid(alpha=0.3)
@@ -377,9 +368,7 @@ def plot_dashboard(
         .sort_values("importance", ascending=False)
         .head(15)
     )
-    ax9.barh(
-        fi["feature"][::-1], fi["importance"][::-1], color="#0284C7", edgecolor="white"
-    )
+    ax9.barh(fi["feature"][::-1], fi["importance"][::-1], color="#0284C7", edgecolor="white")
     ax9.set(xlabel="Importance (Gain)", title="Top 15 Features (LightGBM)")
     ax9.grid(axis="x", alpha=0.3)
 
@@ -605,9 +594,7 @@ def evaluate(model_path: str, threshold_override: float | None = None) -> dict: 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Full evaluation pipeline")
     parser.add_argument("--model", default="models/model_lending.pkl")
-    parser.add_argument(
-        "--threshold", type=float, default=None, help="Override the saved threshold"
-    )
+    parser.add_argument("--threshold", type=float, default=None, help="Override the saved threshold")
     args = parser.parse_args()
 
     evaluate(args.model, args.threshold)

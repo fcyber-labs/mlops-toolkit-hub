@@ -5,6 +5,7 @@ Lending Club Credit Risk — Preprocessing Pipeline
 
 """
 
+import sys
 import os
 import gc
 import json
@@ -74,19 +75,13 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
         df["term"] = df["term"].astype(str).str.extract(r"(\d+)").astype(float)
 
     if "int_rate" in df.columns:
-        df["int_rate"] = pd.to_numeric(
-            df["int_rate"].astype(str).str.replace("%", ""), errors="coerce"
-        )
+        df["int_rate"] = pd.to_numeric(df["int_rate"].astype(str).str.replace("%", ""), errors="coerce")
 
     if "revol_util" in df.columns:
-        df["revol_util"] = pd.to_numeric(
-            df["revol_util"].astype(str).str.replace("%", ""), errors="coerce"
-        )
+        df["revol_util"] = pd.to_numeric(df["revol_util"].astype(str).str.replace("%", ""), errors="coerce")
 
     if "emp_length" in df.columns:
-        df["emp_length"] = (
-            df["emp_length"].astype(str).str.extract(r"(\d+)").astype(float).fillna(0)
-        )
+        df["emp_length"] = df["emp_length"].astype(str).str.extract(r"(\d+)").astype(float).fillna(0)
 
     #  2. FICO midpoint
     if "fico_range_low" in df.columns and "fico_range_high" in df.columns:
@@ -97,9 +92,7 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
     if "earliest_cr_line" in df.columns:
         df["earliest_cr_line"] = pd.to_datetime(df["earliest_cr_line"], errors="coerce")
         ref_date = pd.Timestamp("2018-12-01")
-        df["credit_history_months"] = (
-            ((ref_date - df["earliest_cr_line"]).dt.days / 30.44).fillna(0).clip(0)
-        )
+        df["credit_history_months"] = ((ref_date - df["earliest_cr_line"]).dt.days / 30.44).fillna(0).clip(0)
         df.drop("earliest_cr_line", axis=1, inplace=True)
 
     #  4. Grade / sub_grade ordinal encoding
@@ -124,18 +117,12 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
     if "mort_acc" in df.columns and "total_acc" in df.columns:
         fill_map = df.groupby("total_acc")["mort_acc"].median()
         df["mort_acc"] = df.apply(
-            lambda r: (
-                fill_map.get(r["total_acc"], 0)
-                if pd.isna(r["mort_acc"])
-                else r["mort_acc"]
-            ),
+            lambda r: fill_map.get(r["total_acc"], 0) if pd.isna(r["mort_acc"]) else r["mort_acc"],
             axis=1,
         )
 
     #  7. Categorical label encoding
-    cat_cols = [
-        c for c in df.select_dtypes(include="object").columns if c != target_col
-    ]
+    cat_cols = [c for c in df.select_dtypes(include="object").columns if c != target_col]
     le_dict: dict[str, LabelEncoder] = {}
     for col in cat_cols:
         le = LabelEncoder()
@@ -247,11 +234,7 @@ def engineer_features(df: pd.DataFrame, target_col: str) -> tuple[pd.DataFrame, 
 
 def _clean_col_names(df: pd.DataFrame) -> pd.DataFrame:
     """Strip special chars for LightGBM compatibility."""
-    df.columns = (
-        df.columns.str.replace(r"[^\w]", "_", regex=True)
-        .str.replace("__", "_", regex=False)
-        .str.strip("_")
-    )
+    df.columns = df.columns.str.replace(r"[^\w]", "_", regex=True).str.replace("__", "_", regex=False).str.strip("_")
     return df
 
 
@@ -272,18 +255,14 @@ def preprocess(input_path: str, output_path: str) -> None:
     logger.info(f"Loading data in {CHUNK_SIZE:,}-row chunks …")
     chunks, total_rows = [], 0
 
-    for i, chunk in enumerate(
-        pd.read_csv(input_path, chunksize=CHUNK_SIZE, low_memory=False)
-    ):
+    for i, chunk in enumerate(pd.read_csv(input_path, chunksize=CHUNK_SIZE, low_memory=False)):
         chunk = chunk[chunk["loan_status"].isin(["Fully Paid", "Charged Off"])].copy()
         chunk["target"] = (chunk["loan_status"] == "Charged Off").astype(int)
         available = [c for c in FEATURE_COLS if c in chunk.columns]
         chunk = chunk[available + ["target"]]
         chunks.append(chunk)
         total_rows += len(chunk)
-        logger.info(
-            f"  Chunk {i + 1}: {len(chunk):,} rows  (cumulative {total_rows:,})"
-        )
+        logger.info(f"  Chunk {i + 1}: {len(chunk):,} rows  (cumulative {total_rows:,})")
 
     df = pd.concat(chunks, ignore_index=True)
     del chunks
@@ -327,21 +306,15 @@ def preprocess(input_path: str, output_path: str) -> None:
     logger.info(f"Feature selection : {k} of {X.shape[1] + (X.shape[1] - k)} kept")
 
     #  70 / 15 / 15 stratified split
-    X_train, X_temp, y_train, y_temp = train_test_split(
-        X, y, test_size=0.30, stratify=y, random_state=RANDOM_STATE
-    )
+    X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.30, stratify=y, random_state=RANDOM_STATE)
     X_val, X_test, y_val, y_test = train_test_split(
         X_temp, y_temp, test_size=0.50, stratify=y_temp, random_state=RANDOM_STATE
     )
 
     pos_weight = float((y_train == 0).sum() / (y_train == 1).sum())
 
-    logger.info(
-        f"Split  train={X_train.shape[0]:,}  val={X_val.shape[0]:,}  test={X_test.shape[0]:,}"
-    )
-    logger.info(
-        f"Default rates  train={y_train.mean():.2%}  val={y_val.mean():.2%}  test={y_test.mean():.2%}"
-    )
+    logger.info(f"Split  train={X_train.shape[0]:,}  val={X_val.shape[0]:,}  test={X_test.shape[0]:,}")
+    logger.info(f"Default rates  train={y_train.mean():.2%}  val={y_val.mean():.2%}  test={y_test.mean():.2%}")
     logger.info(f"scale_pos_weight : {pos_weight:.2f}")
 
     #  Save processed splits
@@ -350,9 +323,7 @@ def preprocess(input_path: str, output_path: str) -> None:
     X_val.to_csv("data/processed/X_val.csv", index=False)
     y_val.to_csv("data/processed/y_val.csv", index=False)
     X_test.to_csv("data/processed/X_test.csv", index=False)
-    pd.DataFrame(y_test.values, columns=["risk"]).to_csv(
-        "data/processed/y_test.csv", index=False
-    )
+    pd.DataFrame(y_test.values, columns=["risk"]).to_csv("data/processed/y_test.csv", index=False)
 
     #  Save artefacts
     joblib.dump(selector, "data/processed/feature_selector.pkl")

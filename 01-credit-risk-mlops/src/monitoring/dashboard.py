@@ -34,9 +34,7 @@ def calculate_psi(expected, actual, bins=10):
     # Avoid division by zero
     expected_counts = np.clip(expected_counts, 1e-6, 1)
     actual_counts = np.clip(actual_counts, 1e-6, 1)
-    psi_values = (actual_counts - expected_counts) * np.log(
-        actual_counts / expected_counts
-    )
+    psi_values = (actual_counts - expected_counts) * np.log(actual_counts / expected_counts)
     return np.sum(psi_values)
 
 
@@ -153,10 +151,7 @@ def run_drift_analysis(ref_df, stream_df, numeric_cols, phase="phase1"):
             col_stream = col
 
         # Check if column exists in both dataframes
-        if (
-            col_ref not in ref_filtered.columns
-            or col_stream not in stream_filtered.columns
-        ):
+        if col_ref not in ref_filtered.columns or col_stream not in stream_filtered.columns:
             continue
 
         # Extract numeric values
@@ -210,9 +205,7 @@ def display_metric_row(metrics, phase_name):
     available_metrics = {
         k: v
         for k, v in metrics.items()
-        if isinstance(v, (int, float))
-        and k not in exclude_keys
-        and not k.startswith("_")
+        if isinstance(v, (int, float)) and k not in exclude_keys and not k.startswith("_")
     }
 
     # Create columns dynamically
@@ -235,9 +228,7 @@ def display_metric_row(metrics, phase_name):
             elif isinstance(value, float) and value < 1:
                 formatted_value = f"{value:.4f}"
             else:
-                formatted_value = (
-                    f"{value:.2f}" if isinstance(value, float) else str(value)
-                )
+                formatted_value = f"{value:.2f}" if isinstance(value, float) else str(value)
 
             st.metric(display_name, formatted_value)
 
@@ -335,15 +326,11 @@ display_metric_row(metrics_1, "Phase 1")
 
 if ref_data_1 is not None and stream_data_1 is not None:
     numeric_cols_1 = ["Age", "Credit amount", "Duration", "Job"]
-    drift_df_1 = run_drift_analysis(
-        ref_data_1, stream_data_1, numeric_cols_1, phase="phase1"
-    )
+    drift_df_1 = run_drift_analysis(ref_data_1, stream_data_1, numeric_cols_1, phase="phase1")
 
     if len(drift_df_1) > 0:
         st.subheader("📋 Drift Analysis Table (PSI + KS)")
-        st.caption(
-            "PSI < 0.1: Stable | PSI 0.1-0.25: Moderate | PSI > 0.25: Significant Drift"
-        )
+        st.caption("PSI < 0.1: Stable | PSI 0.1-0.25: Moderate | PSI > 0.25: Significant Drift")
 
         st.dataframe(
             drift_df_1,
@@ -362,10 +349,7 @@ if ref_data_1 is not None and stream_data_1 is not None:
         # PSI Bar Chart
         st.subheader("📈 PSI Drift Visualization")
         fig1 = go.Figure()
-        colors = [
-            "#2ecc71" if psi < 0.1 else "#f39c12" if psi < 0.25 else "#e74c3c"
-            for psi in drift_df_1["PSI"]
-        ]
+        colors = ["#2ecc71" if psi < 0.1 else "#f39c12" if psi < 0.25 else "#e74c3c" for psi in drift_df_1["PSI"]]
         fig1.add_trace(
             go.Bar(
                 x=drift_df_1["Feature"],
@@ -420,13 +404,9 @@ if ref_data_1 is not None and stream_data_1 is not None:
             st.metric("Overall Status", drift_status(overall_psi))
 
         if overall_psi > 0.25:
-            st.error(
-                f"🚨 SIGNIFICANT DRIFT DETECTED (PSI={overall_psi:.3f}) → Retraining strongly recommended"
-            )
+            st.error(f"🚨 SIGNIFICANT DRIFT DETECTED (PSI={overall_psi:.3f}) → Retraining strongly recommended")
         elif overall_psi > 0.1:
-            st.warning(
-                f"⚠️ MODERATE DRIFT DETECTED (PSI={overall_psi:.3f}) → Monitor closely"
-            )
+            st.warning(f"⚠️ MODERATE DRIFT DETECTED (PSI={overall_psi:.3f}) → Monitor closely")
         else:
             st.success(f"✅ SYSTEM STABLE (PSI={overall_psi:.3f}) → No action needed")
     else:
@@ -462,15 +442,11 @@ if ref_data_2 is not None and stream_data_2 is not None:
         "dti",
         "int_rate",
     ]
-    drift_df_2 = run_drift_analysis(
-        ref_data_2, stream_data_2, numeric_cols_2, phase="phase2"
-    )
+    drift_df_2 = run_drift_analysis(ref_data_2, stream_data_2, numeric_cols_2, phase="phase2")
 
     if len(drift_df_2) > 0:
         st.subheader("📋 Drift Analysis Table (PSI + KS)")
-        st.caption(
-            "PSI < 0.1: Stable | PSI 0.1-0.25: Moderate | PSI > 0.25: Significant Drift"
-        )
+        st.caption("PSI < 0.1: Stable | PSI 0.1-0.25: Moderate | PSI > 0.25: Significant Drift")
 
         st.dataframe(
             drift_df_2,
@@ -489,10 +465,7 @@ if ref_data_2 is not None and stream_data_2 is not None:
         # PSI Bar Chart
         st.subheader("📈 PSI Drift Visualization")
         fig2 = go.Figure()
-        colors_2 = [
-            "#2ecc71" if psi < 0.1 else "#f39c12" if psi < 0.25 else "#e74c3c"
-            for psi in drift_df_2["PSI"]
-        ]
+        colors_2 = ["#2ecc71" if psi < 0.1 else "#f39c12" if psi < 0.25 else "#e74c3c" for psi in drift_df_2["PSI"]]
         fig2.add_trace(
             go.Bar(
                 x=drift_df_2["Feature"],
@@ -547,13 +520,9 @@ if ref_data_2 is not None and stream_data_2 is not None:
             st.metric("Overall Status", drift_status(overall_psi_2))
 
         if overall_psi_2 > 0.25:
-            st.error(
-                f"🚨 SIGNIFICANT DRIFT DETECTED (PSI={overall_psi_2:.3f}) → Retraining strongly recommended"
-            )
+            st.error(f"🚨 SIGNIFICANT DRIFT DETECTED (PSI={overall_psi_2:.3f}) → Retraining strongly recommended")
         elif overall_psi_2 > 0.1:
-            st.warning(
-                f"⚠️ MODERATE DRIFT DETECTED (PSI={overall_psi_2:.3f}) → Monitor closely"
-            )
+            st.warning(f"⚠️ MODERATE DRIFT DETECTED (PSI={overall_psi_2:.3f}) → Monitor closely")
         else:
             st.success(f"✅ SYSTEM STABLE (PSI={overall_psi_2:.3f}) → No action needed")
     else:
