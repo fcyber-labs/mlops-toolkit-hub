@@ -341,6 +341,7 @@ Synthetic Streaming Generator
 </tr>
 </tbody>
 </table>
+
 ---
 
 ## ⚙️ Pipeline Features
@@ -590,7 +591,7 @@ This project is licensed under the **MIT License** — free for commercial and p
 
 <div align="center">
 
-**Built as a complete MLOps**
+**Built as a complete MLOps Project**
 
 [![GitHub](https://img.shields.io/badge/GitHub-fcyber%2Fmlops--toolkit--hub-24292E?style=for-the-badge&logo=github)](https://github.com/fcyber-labs/mlops-toolkit-hub/tree/main/01-credit-risk-mlops)
 [![MLflow Dashboard](https://img.shields.io/badge/MLflow-Live%20Dashboard-FF6F20?style=for-the-badge&logo=mlflow&logoColor=white)](https://dagshub.com/fcyber/german-credit-mlops.mlflow/)
