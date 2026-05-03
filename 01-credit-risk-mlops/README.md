@@ -21,30 +21,11 @@
 
 <br/>
 
-![LightGBM](https://img.shields.io/badge/LightGBM-⚡-blue) 
-![XGBoost](https://img.shields.io/badge/XGBoost-🚀-orange) 
-![Scikit-learn](https://img.shields.io/badge/Scikit--learn-🧠-red) 
-![Optuna](https://img.shields.io/badge/Optuna-🎯-green) 
-![Imbalanced-learn](https://img.shields.io/badge/Imbalanced--learn-⚖️-yellow) 
-![SHAP](https://img.shields.io/badge/SHAP-🔮-purple) 
-![Matplotlib](https://img.shields.io/badge/Matplotlib-📊-blue) 
-![Seaborn](https://img.shields.io/badge/Seaborn-🎨-teal) 
-![FastAPI](https://img.shields.io/badge/FastAPI-⚡-teal) 
-![Streamlit](https://img.shields.io/badge/Streamlit-📱-pink) 
-![Uvicorn](https://img.shields.io/badge/Uvicorn-🦄-blue) 
-![PSI](https://img.shields.io/badge/PSI-📈-purple) 
-![KS-Test](https://img.shields.io/badge/KS--Test-Statistic-8B5CF6)
 
-<br/>
 
-[![MLflow](https://img.shields.io/badge/MLflow-Experiment_Tracking-0194E2?style=flat-square&logo=mlflow&logoColor=white)](https://dagshub.com/fcyber/german-credit-mlops.mlflow/)
-[![DagsHub](https://img.shields.io/badge/DagsHub-Data_Storage-28A745?style=flat-square&logo=dagshub&logoColor=white)](https://dagshub.com/fcyber/german-credit-mlops)
-[![GitHub](https://img.shields.io/badge/GitHub-Source_Code-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/fcyber-labs/mlops-toolkit-hub)
-[![Docker Hub](https://img.shields.io/badge/Docker_Hub-Container_Registry-2496ED?style=flat-square&logo=docker&logoColor=white)](https://hub.docker.com/r/fcyber/credit-risk-mlops)
-
-</div>
 
 ---
+
 
 ## 📋 Table of Contents
 
@@ -62,7 +43,27 @@
 - [Key Learnings](#-key-learnings)
 - [Roadmap](#-roadmap)
 
+
+
+![LightGBM](https://img.shields.io/badge/LightGBM-⚡-blue) 
+![XGBoost](https://img.shields.io/badge/XGBoost-🚀-orange) 
+![Scikit-learn](https://img.shields.io/badge/Scikit--learn-🧠-red) 
+![Optuna](https://img.shields.io/badge/Optuna-🎯-green) 
+![Imbalanced-learn](https://img.shields.io/badge/Imbalanced--learn-⚖️-yellow) 
+![SHAP](https://img.shields.io/badge/SHAP-🔮-purple) 
+![Matplotlib](https://img.shields.io/badge/Matplotlib-📊-blue) 
+![Seaborn](https://img.shields.io/badge/Seaborn-🎨-teal) 
+![FastAPI](https://img.shields.io/badge/FastAPI-⚡-teal) 
+![Streamlit](https://img.shields.io/badge/Streamlit-📱-pink) 
+![Uvicorn](https://img.shields.io/badge/Uvicorn-🦄-blue) 
+![PSI](https://img.shields.io/badge/PSI-📈-purple) 
+![KS-Test](https://img.shields.io/badge/KS--Test-Statistic-8B5CF6)
+
+<br/>
+
 ---
+
+
 
 ## 🧠 Project Overview
 
@@ -70,7 +71,14 @@
 
 This project is built around a **data-agnostic, modular pipeline** — plug in any tabular dataset and the system adapts. Rather than building isolated models, the emphasis is on **reproducibility, business impact, and continuous deployment** — the hallmarks of real MLOps engineering.
 
+[![MLflow](https://img.shields.io/badge/MLflow-Experiment_Tracking-0194E2?style=flat-square&logo=mlflow&logoColor=white)](https://dagshub.com/fcyber/german-credit-mlops.mlflow/)
+[![DagsHub](https://img.shields.io/badge/DagsHub-Data_Storage-28A745?style=flat-square&logo=dagshub&logoColor=white)](https://dagshub.com/fcyber/german-credit-mlops)
+[![GitHub](https://img.shields.io/badge/GitHub-Source_Code-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/fcyber-labs/mlops-toolkit-hub)
+[![Docker Hub](https://img.shields.io/badge/Docker_Hub-Container_Registry-2496ED?style=flat-square&logo=docker&logoColor=white)](https://hub.docker.com/r/fcyber/credit-risk-mlops)
 
+</div>
+
+---
 
 ## ✅ CI Pipeline - Credit Risk MLOps
 
